@@ -1,6 +1,9 @@
 # Created by https://www.gitignore.io/api/node,linux,macos,windows
 # Edit at https://www.gitignore.io/?templates=node,linux,macos,windows
 
+# BC19 files
+compiled_bot.js
+
 ### Linux ###
 *~
 
