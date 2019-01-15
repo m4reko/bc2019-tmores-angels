@@ -1,7 +1,7 @@
 import {BCAbstractRobot, SPECS} from 'battlecode';
 
 // eslint-disable-next-line no-unused-vars
-class MyRobot extends BCAbstractRobot {
+class Unit extends BCAbstractRobot {
     constructor() {
         super();
         this.pendingRecievedMessages = {};
