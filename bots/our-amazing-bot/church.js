@@ -1,6 +1,6 @@
 
 var churchHelper = {
-  turn: function(self) {
+  turn: self => {
     // we do stuff
   }
 };

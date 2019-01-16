@@ -1,8 +1,8 @@
 
 var castleHelper = {
-  turn: function(self) {
+  turn: self => {
     // we do stuff
-    
+
   }
 };
 

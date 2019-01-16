@@ -1,6 +1,6 @@
 
 var prophetHelper = {
-  turn: function(self) {
+  turn: self => {
     // we do stuff
   }
 };
