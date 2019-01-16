@@ -19,18 +19,14 @@ class MyRobot extends BCAbstractRobot {
             this.log('health: ' + this.me.health);
 
             var visible = this.getVisibleRobots();
-            
-            // this sucks I'm sorry...
-            // This is actually fine. Or use .bind()
-            var self = this; // 'this' fails to properly identify MyRobot when used inside of anonymous function below :(
 
             // get attackable robots
             var attackable = visible.filter((r) => {
-                if (! self.isVisible(r)){
+                if (!this.isVisible(r)){
                     return false;
                 }
-                const dist = (r.x-self.me.x)**2 + (r.y-self.me.y)**2;
-                if (r.team !== self.me.team
+                const dist = (r.x-this.me.x)**2 + (r.y-this.me.y)**2;
+                if (r.team !== this.me.team
                     && SPECS.UNITS[this.me.unit].ATTACK_RADIUS[0] <= dist
                     && dist <= SPECS.UNITS[this.me.unit].ATTACK_RADIUS[1] ){
                     return true;
@@ -92,10 +88,10 @@ class MyRobot extends BCAbstractRobot {
             }
 
             const choice = nav.goto(
-                this.me, 
+                this.me,
                 this.destination,
-                this.map, 
-                this.getPassableMap(), 
+                this.map,
+                this.getPassableMap(),
                 this.getVisibleRobotMap());
             return this.move(choice.x, choice.y);
         } else if (this.me.unit === SPECS.PILGRIM) {
@@ -128,10 +124,10 @@ class MyRobot extends BCAbstractRobot {
             }
             // If we have nothing else to do, move to our destination.
             const choice = nav.goto(
-                this.me, 
+                this.me,
                 this.destination,
-                this.map, 
-                this.getPassableMap(), 
+                this.map,
+                this.getPassableMap(),
                 this.getVisibleRobotMap());
 
             return this.move(choice.x, choice.y);
@@ -168,7 +164,7 @@ class MyRobot extends BCAbstractRobot {
                 this.log('Building a pilgrim at ' + (this.me.x+1) + ',' + (this.me.y+1));
                 this.hasBuiltPilgrim = true;
                 return this.buildUnit(SPECS.PILGRIM, 1, 0);
-            } 
+            }
 
             if (this.karbonite > 200) {
                 // const unitEnum = Math.floor(Math.random() * 3);
