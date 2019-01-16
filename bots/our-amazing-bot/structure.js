@@ -5,3 +5,5 @@ var structureHelper = {
     // I bild :D
   }
 }
+
+export default structureHelper;
