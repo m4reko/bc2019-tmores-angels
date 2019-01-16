@@ -2,6 +2,15 @@
 Tmore's angels' repository for Battlecode 2019
 
 # How to run?
-- First install npm package bc19: npm install -g bc19
-- Then go to folder and run: bc19run -b bots/our-fantastic-bot -r bots/example_js --chi 1000
-- Upload with bc19upload (not sure how)
+- Install npm
+- Install npm package bc19: npm install -g bc19
+- Go to main folder and run: bc19run -b bots/our-amazing-bot -r bots/example-js --chi 1000
+
+# How to upload
+- Compile with bc19compile -d bots/our-amazing-bot
+- Write into bash:
+export BC_USERNAME={BATTLE_CODE_USERNAME}
+export BC_PASSWORD={BATTLE_CODE_PASSWORD}
+- Upload with bc19upload -i compiled_bot.js
+
+
