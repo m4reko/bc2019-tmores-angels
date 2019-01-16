@@ -1,6 +1,6 @@
 
 var crusaderHelper = {
-  turn: function(context) {
+  turn: function(self) {
     // we do stuff
   }
 };

@@ -1,6 +1,6 @@
 
 var preacherHelper = {
-  turn: function(context) {
+  turn: function(self) {
     // we do stuff
   }
 };
