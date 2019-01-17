@@ -1,5 +1,29 @@
 
 var unitHelper = {
+  directions: [
+    {x:-1, y:0},
+    {x:1, y:0},
+    {x:-1, y:1},
+    {x:1, y:1},
+    {x:0, y:-1},
+    {x:0, y:1},
+    {x:1, y:-1},
+    {x:-1, y:-1}
+  ],
+
+  isPassable: (loc, fullMap, robotMap) => {
+    const {x, y} = loc;
+    const mapLen = fullMap.length;
+    if (x >= mapLen || x < 0) {
+        return false;
+    } else if (y >= mapLen || y < 0) {
+        return false;
+    } else if (robotMap[y][x] > 0 || !fullMap[y][x]) {
+        return false;
+    } else {
+        return true;
+    }
+  },
   // I halp
   path: () => {
     // I find paths :D
@@ -24,8 +48,8 @@ var unitHelper = {
       for(var i = 0; i<current_locations.length; i++){
         current_location = current_locations[i];
         // Check all adjacent tiles:
-        for(var j = 0; j<nav.directions.length; j++){
-          let direction  = nav.directions[j];
+        for(var j = 0; j<unitHelper.directions.length; j++){
+          let direction  = unitHelper.directions[j];
           let new_location = {};
           new_location.x = current_location.x + direction.x;
           new_location.y = current_location.y + direction.y;
@@ -33,7 +57,7 @@ var unitHelper = {
           if(new_location.y >= 0 && new_location.y < fullMap.length &&
             new_location.x >= 0 && new_location.x < fullMap.length &&
             distMap[new_location.y][new_location.x] == undefined){
-            if(!nav.isPassable(new_location, fullMap, robotMap)){
+            if(!unitHelper.isPassable(new_location, fullMap, robotMap)){
               distMap[new_location.y][new_location.x] = -2;
             }else{
               distMap[new_location.y][new_location.x] = moves + 1;
