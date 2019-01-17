@@ -11,6 +11,10 @@ var unitHelper = {
     {x:-1, y:-1}
   ],
 
+  sqDist : (start, end) => {
+    return Math.pow(start.x - end.x, 2) + Math.pow(start.y - end.y, 2);
+  },
+
   isPassable: (loc, fullMap, robotMap) => {
     const {x, y} = loc;
     const mapLen = fullMap.length;
@@ -23,6 +27,21 @@ var unitHelper = {
     } else {
         return true;
     }
+  },
+
+  getClosestKarbonite : (loc, karbMap) => {
+      const mapLen = karbMap.length;
+      let closestLoc = null;
+      let closestDist = 100000; // Large number;
+      for (let y = 0; y < mapLen; y++) {
+          for (let x = 0; x < mapLen; x++) {
+              if (karbMap[y][x] && unitHelper.sqDist({x,y}, loc) < closestDist) {
+                  closestDist = unitHelper.sqDist({x,y}, loc);
+                  closestLoc = {x,y};
+              }
+          }
+      }
+      return closestLoc;
   },
   // I halp
   path: () => {

@@ -3,8 +3,6 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var pilgrimHelper = {
   turn: self => {
-    self.log("moving pilgrim");
-
     // On the first turn, find out our base
     if (!self.castle) {
         self.castle = self.getVisibleRobots()
@@ -20,10 +18,10 @@ var pilgrimHelper = {
     }
 
     let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+    self.log("Current location: (" +(location.x) + ", " +(location.y) + ")");
     self.log("Next location: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
-
-    self.move(nextDirection.x, nextDirection.y);
-    return null;
+    self.log("moving pilgrim");
+    return self.move(nextDirection.x, nextDirection.y);
   }
 };
 
