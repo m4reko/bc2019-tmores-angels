@@ -19,7 +19,6 @@ var castleHelper = {
     }
 
     const team = self.me.team;
-    self.log(self.last_offer);
     let selfOffer = self.last_offer[team];
 
     let tradeSign = 1;
@@ -31,12 +30,9 @@ var castleHelper = {
     if (self.step === 1) {
       // things to do first turn only
       // count castles
-      self.log(self.me.x);
-      self.log(self.me.y);
       let castles = selfOffer[0] || 0;
       castles += 1 * tradeSign;
       self.castleNumber = castles * tradeSign;
-      self.log(castles);
       return self.proposeTrade(castles, 1000 * tradeSign);
 
     } else if (self.step === 2 && (selfOffer[0] > 1 || selfOffer[0] < -1)) {
@@ -56,11 +52,34 @@ var castleHelper = {
         self.castleLocations[self.castleNumber - 1] = [self.me.x, self.me.y];
         return self.proposeTrade(parseInt((highestCastleCount * tradeSign).toString() + self.me.x.toString(), 10), parseInt((highestCastleCount * tradeSign).toString() + self.me.y.toString(), 10));
       }
-      self.log(self.castleNumber);
-      self.log(selfOffer);
     } else if (self.step === 3) {
       // things to do on the third turn only
       // check the next castle location if there is one
+      let highestCastleCount = selfOffer[0].toString();
+      highestCastleCount = parseInt(highestCastleCount.substring(0, isNegative), 10);
+      if (highestCastleCount > 1) {
+        if (self.castleNumber !== highestCastleCount) {
+          let offerXString = selfOffer[0].toString();
+          let offerYString = selfOffer[1].toString();
+          self.castleLocations[highestCastleCount - 1] = [parseInt(offerXString.substring(isNegative), 10), parseInt(offerYString.substring(isNegative), 10)];
+        }
+        if (self.castleNumber !== highestCastleCount && self.castleNumber !== 1) {
+          self.castleLocations[self.castleNumber - 1] = [self.me.x, self.me.y];
+          return self.proposeTrade(parseInt((highestCastleCount * tradeSign).toString() + self.me.x.toString(), 10), parseInt((highestCastleCount * tradeSign).toString() + self.me.y.toString(), 10));
+        }
+      }
+    } else if (self.step === 4) {
+      // things to do on the fourth turn only
+      // if there are 3 castles we check the last positions here
+      let highestCastleCount = selfOffer[0].toString();
+      highestCastleCount = parseInt(highestCastleCount.substring(0, isNegative), 10);
+      if (highestCastleCount > 2) {
+        if (self.castleNumber === 1 || self.castleNumber === 3) {
+          let offerXString = selfOffer[0].toString();
+          let offerYString = selfOffer[1].toString();
+          self.castleLocations[1] = [parseInt(offerXString.substring(isNegative), 10), parseInt(offerYString.substring(isNegative), 10)];
+        }
+      }
       self.log(self.castleLocations);
     }
 
