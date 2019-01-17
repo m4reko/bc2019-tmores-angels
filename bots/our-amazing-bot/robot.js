@@ -11,6 +11,13 @@ class MyRobot extends BCAbstractRobot {
         super();
         this.pendingRecievedMessages = {};
         this.enemyCastles = [];
+        this.castleLocations = [
+          [-1, -1],
+          [-1, -1],
+          [-1, -1]
+        ];
+        this.castleNumber = null;
+        this.objectiveMap = null;
         this.helper = null;
         this.step = 0;
     }
@@ -31,10 +38,12 @@ class MyRobot extends BCAbstractRobot {
       }
     }
 
-
     turn() {
       if (this.step === 0) this.identifyUnit();
       this.step++;
-      this.helper.turn(this);
+      const res = this.helper.turn(this);
+      if (res !== null) {
+        return res;
+      }
     }
 }
