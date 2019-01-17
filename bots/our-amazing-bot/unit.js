@@ -1,5 +1,48 @@
 
 var unitHelper = {
+  directions: [
+    {x:-1, y:0},
+    {x:1, y:0},
+    {x:-1, y:1},
+    {x:1, y:1},
+    {x:0, y:-1},
+    {x:0, y:1},
+    {x:1, y:-1},
+    {x:-1, y:-1}
+  ],
+
+  sqDist : (start, end) => {
+    return Math.pow(start.x - end.x, 2) + Math.pow(start.y - end.y, 2);
+  },
+
+  isPassable: (loc, fullMap, robotMap) => {
+    const {x, y} = loc;
+    const mapLen = fullMap.length;
+    if (x >= mapLen || x < 0) {
+        return false;
+    } else if (y >= mapLen || y < 0) {
+        return false;
+    } else if (robotMap[y][x] > 0 || !fullMap[y][x]) {
+        return false;
+    } else {
+        return true;
+    }
+  },
+
+  getClosestKarbonite : (loc, karbMap) => {
+      const mapLen = karbMap.length;
+      let closestLoc = null;
+      let closestDist = 100000; // Large number;
+      for (let y = 0; y < mapLen; y++) {
+          for (let x = 0; x < mapLen; x++) {
+              if (karbMap[y][x] && unitHelper.sqDist({x,y}, loc) < closestDist) {
+                  closestDist = unitHelper.sqDist({x,y}, loc);
+                  closestLoc = {x,y};
+              }
+          }
+      }
+      return closestLoc;
+  },
   // I halp
   path: () => {
     // I find paths :D
@@ -24,8 +67,8 @@ var unitHelper = {
       for(var i = 0; i<current_locations.length; i++){
         current_location = current_locations[i];
         // Check all adjacent tiles:
-        for(var j = 0; j<nav.directions.length; j++){
-          let direction  = nav.directions[j];
+        for(var j = 0; j<unitHelper.directions.length; j++){
+          let direction  = unitHelper.directions[j];
           let new_location = {};
           new_location.x = current_location.x + direction.x;
           new_location.y = current_location.y + direction.y;
@@ -33,7 +76,7 @@ var unitHelper = {
           if(new_location.y >= 0 && new_location.y < fullMap.length &&
             new_location.x >= 0 && new_location.x < fullMap.length &&
             distMap[new_location.y][new_location.x] == undefined){
-            if(!nav.isPassable(new_location, fullMap, robotMap)){
+            if(!unitHelper.isPassable(new_location, fullMap, robotMap)){
               distMap[new_location.y][new_location.x] = -2;
             }else{
               distMap[new_location.y][new_location.x] = moves + 1;
@@ -61,8 +104,9 @@ var unitHelper = {
     // Test all positions in range and find the one closest to 0
     for(var y = loc.y-range; y<=loc.y+range; y++){
       for(var x = loc.x-range; x<=loc.x+range; x++){
-        if( y<distMap.length && x<distMap.length && x>0 && y>0 &&
-          distMap[y][x] < currentValue && distMap[y][x] > -1){
+        if( y<distMap.length && x<distMap.length && x>=0 && y>=0 &&
+          distMap[y][x] < currentValue && distMap[y][x] > -1 &&
+          !(loc.x == x && loc.y == y)){
             currentLocation.x =  x;
             currentLocation.y =  y;
             currentValue = distMap[y][x];
