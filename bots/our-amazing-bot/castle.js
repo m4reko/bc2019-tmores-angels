@@ -107,11 +107,14 @@ var castleHelper = {
     }
 
     // Build crusadors
-    if (self.karbonite >= 20 && !self.spawnedPilgrim) {
-      self.spawnedPilgrim = true;
+    if(!self.spawnedPilgrims){
+      self.spawnedPilgrims = 0;
+    }
+    if (self.karbonite >= 20 && self.spawnedPilgrims < 10) {
+      self.spawnedPilgrims++;
       let location = {x: self.me.x, y: self.me.y};
-
-      let randomDirection = {x:0, y:-1};
+      let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
+      let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
 
       self.log('Building a pilgrim at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
       return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);

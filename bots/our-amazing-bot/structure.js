@@ -14,6 +14,34 @@ var structureHelper = {
     }
 
     return true;
+  },
+
+  isPassable: (loc, fullMap, robotMap) => {
+    const {x, y} = loc;
+    const mapLen = fullMap.length;
+    if (x >= mapLen || x < 0) {
+        return false;
+    } else if (y >= mapLen || y < 0) {
+        return false;
+    } else if (robotMap[y][x] > 0 || !fullMap[y][x]) {
+        return false;
+    } else {
+        return true;
+    }
+  },
+
+  getPossibleDirections : (loc, fullMap, robotMap) => {
+    let possibleDirections = [];
+    for(var x=-1;x<=1; x++){
+      for(var y=-1;y<=1; y++){
+        let dir = {x:x, y:y};
+        let testLocation = {x: (loc.x + dir.x), y: (loc.y-dir.y)};
+        if(structureHelper.isPassable(testLocation, fullMap, robotMap)){
+          possibleDirections.push(dir);
+        }
+      }
+    }
+    return possibleDirections;
   }
 }
 

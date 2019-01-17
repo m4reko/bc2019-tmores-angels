@@ -43,6 +43,20 @@ var unitHelper = {
       }
       return closestLoc;
   },
+
+  getRandomKarbonite : (loc, karbMap) => {
+      const mapLen = karbMap.length;
+      let locations = [];
+      for (let y = 0; y < mapLen; y++) {
+          for (let x = 0; x < mapLen; x++) {
+              if (karbMap[y][x]) {
+                  locations.push({x,y});
+              }
+          }
+      }
+      return locations[Math.floor(Math.random() * locations.length)];
+  },
+
   // I halp
   path: () => {
     // I find paths :D
