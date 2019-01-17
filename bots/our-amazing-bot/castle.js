@@ -1,8 +1,20 @@
 import structureHelper from './structure.js';
+import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var castleHelper = {
   turn: self => {
     // we do stuff
+    // Build crusadors
+    if (self.karbonite >= 20 && !self.spawnedPilgrim) {
+      self.spawnedPilgrim = true;
+      let location = {x: self.me.x, y: self.me.y};
+
+      let randomDirection = {x:0, y:-1};
+
+      self.log('Building a pilgrim at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
+      return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
+    }
+
     const team = self.me.team;
     self.log(self.last_offer);
     let selfOffer = self.last_offer[team];
