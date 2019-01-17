@@ -4,17 +4,6 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 var castleHelper = {
   turn: self => {
     // we do stuff
-    // Build crusadors
-    if (self.karbonite >= 20 && !self.spawnedPilgrim) {
-      self.spawnedPilgrim = true;
-      let location = {x: self.me.x, y: self.me.y};
-
-      let randomDirection = {x:0, y:-1};
-
-      self.log('Building a pilgrim at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
-      return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
-    }
-
     const team = self.me.team;
     let selfOffer = self.last_offer[team];
 
@@ -32,7 +21,7 @@ var castleHelper = {
       self.castleNumber = castles * tradeSign;
       return self.proposeTrade(castles, 1000 * tradeSign);
 
-    } else if (self.step === 2 && (selfOffer[0] > 1 || selfOffer[0] < -1)) {
+    } else if (self.step === 2) {
       // things to do second turn only
       // check castle locations
       if (self.castleNumber === 1) {
@@ -78,6 +67,54 @@ var castleHelper = {
         }
       }
       self.log(self.castleLocations);
+    } else if (self.step === 5) {
+      // things to do on the fifth turn only
+      // check the map and calculate the position of opposing castles
+      let highestCastleCount = selfOffer[0].toString();
+      highestCastleCount = parseInt(highestCastleCount.substring(0, isNegative), 10);
+
+      const vertical = structureHelper.isVertical(self.map);
+      if (vertical) {
+        self.log('vertical');
+        if (self.castleLocations[0][0] >= 0) {
+          self.oppCastleLocations[0][0] = self.map[0].length - self.castleLocations[0][0];
+          self.oppCastleLocations[0][1] = self.castleLocations[0][1];
+        }
+        if (self.castleLocations[1][0] >= 0) {
+          self.oppCastleLocations[1][0] = self.map[0].length - self.castleLocations[1][0];
+          self.oppCastleLocations[1][1] = self.castleLocations[1][1];
+        }
+        if (self.castleLocations[2][0] >= 0) {
+          self.oppCastleLocations[2][0] = self.map[0].length - self.castleLocations[2][0];
+          self.oppCastleLocations[2][1] = self.castleLocations[2][1];
+        }
+      } else {
+        self.log('horizontal');
+        if (self.castleLocations[0][1] >= 0) {
+          self.oppCastleLocations[0][0] = self.castleLocations[0][0];
+          self.oppCastleLocations[0][1] = self.map.length - self.castleLocations[0][1];
+        }
+        if (self.castleLocations[1][1] >= 0) {
+          self.oppCastleLocations[1][0] = self.castleLocations[1][0];
+          self.oppCastleLocations[1][1] = self.map.length - self.castleLocations[1][1];
+        }
+        if (self.castleLocations[2][1] >= 0) {
+          self.oppCastleLocations[2][0] = self.castleLocations[2][0];
+          self.oppCastleLocations[2][1] = self.map.length - self.castleLocations[2][1];
+        }
+      }
+      self.log(self.oppCastleLocations);
+    }
+
+    // Build crusadors
+    if (self.karbonite >= 20 && !self.spawnedPilgrim) {
+      self.spawnedPilgrim = true;
+      let location = {x: self.me.x, y: self.me.y};
+
+      let randomDirection = {x:0, y:-1};
+
+      self.log('Building a pilgrim at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
+      return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
     }
 
     return null;

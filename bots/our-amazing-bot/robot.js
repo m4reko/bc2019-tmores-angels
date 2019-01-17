@@ -16,6 +16,11 @@ class MyRobot extends BCAbstractRobot {
           [-1, -1],
           [-1, -1]
         ];
+        this.oppCastleLocations = [
+          [-1, -1],
+          [-1, -1],
+          [-1, -1]
+        ];
         this.castleNumber = null;
         this.objectiveMap = null;
         this.helper = null;
