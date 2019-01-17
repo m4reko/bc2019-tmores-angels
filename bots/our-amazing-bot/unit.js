@@ -104,8 +104,9 @@ var unitHelper = {
     // Test all positions in range and find the one closest to 0
     for(var y = loc.y-range; y<=loc.y+range; y++){
       for(var x = loc.x-range; x<=loc.x+range; x++){
-        if( y<distMap.length && x<distMap.length && x>0 && y>0 &&
-          distMap[y][x] < currentValue && distMap[y][x] > -1){
+        if( y<distMap.length && x<distMap.length && x>=0 && y>=0 &&
+          distMap[y][x] < currentValue && distMap[y][x] > -1 &&
+          !(loc.x == x && loc.y == y)){
             currentLocation.x =  x;
             currentLocation.y =  y;
             currentValue = distMap[y][x];

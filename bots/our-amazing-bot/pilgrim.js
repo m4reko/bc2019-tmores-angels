@@ -15,6 +15,10 @@ var pilgrimHelper = {
     if(!self.destination || !self.distanceMap){
       self.destination = {x:0, y:0}; // Why not top left corner?
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+      for(var i=0; i<self.distanceMap.length; i++){
+        self.log(i);
+        self.log(self.distanceMap[i]);
+      }
     }
 
     let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
