@@ -7,6 +7,8 @@ var castleHelper = {
     const team = self.me.team;
     let selfOffer = self.last_offer[team];
 
+    let castleTalkValue = self.me.castle_talk;
+
     let tradeSign = 1;
     if (team === 0) {
       tradeSign = -1;
@@ -26,6 +28,7 @@ var castleHelper = {
       // check castle locations
       if (self.castleNumber === 1) {
         self.castleLocations[0] = [self.me.x, self.me.y];
+        self.castleAmount = selfOffer[0];
         return self.proposeTrade(parseInt(selfOffer[0].toString() + self.me.x.toString(), 10), parseInt(selfOffer[0].toString() + self.me.y.toString(), 10));
       } else {
         let offerXString = selfOffer[0].toString();
@@ -34,48 +37,40 @@ var castleHelper = {
       }
       let highestCastleCount = selfOffer[0].toString();
       highestCastleCount = parseInt(highestCastleCount.substring(0, isNegative), 10);
-      if (self.castleNumber === highestCastleCount * tradeSign) {
+      self.castleAmount = highestCastleCount * tradeSign;
+      if (self.castleNumber === self.castleAmount) {
         self.castleLocations[self.castleNumber - 1] = [self.me.x, self.me.y];
-        return self.proposeTrade(parseInt((highestCastleCount * tradeSign).toString() + self.me.x.toString(), 10), parseInt((highestCastleCount * tradeSign).toString() + self.me.y.toString(), 10));
+        return self.proposeTrade(parseInt((self.castleAmount * tradeSign).toString() + self.me.x.toString(), 10), parseInt((self.castleAmount * tradeSign).toString() + self.me.y.toString(), 10));
       }
     } else if (self.step === 3) {
       // things to do on the third turn only
       // check the next castle location if there is one
-      let highestCastleCount = selfOffer[0].toString();
-      highestCastleCount = parseInt(highestCastleCount.substring(0, isNegative), 10);
-      if (highestCastleCount > 1) {
-        if (self.castleNumber !== highestCastleCount) {
+      if (self.castleAmount > 1) {
+        if (self.castleNumber !== self.castleAmount) {
           let offerXString = selfOffer[0].toString();
           let offerYString = selfOffer[1].toString();
-          self.castleLocations[highestCastleCount - 1] = [parseInt(offerXString.substring(isNegative), 10), parseInt(offerYString.substring(isNegative), 10)];
+          self.castleLocations[self.castleAmount - 1] = [parseInt(offerXString.substring(isNegative), 10), parseInt(offerYString.substring(isNegative), 10)];
         }
-        if (self.castleNumber !== highestCastleCount && self.castleNumber !== 1) {
+        if (self.castleNumber !== self.castleAmount && self.castleNumber !== 1) {
           self.castleLocations[self.castleNumber - 1] = [self.me.x, self.me.y];
-          return self.proposeTrade(parseInt((highestCastleCount * tradeSign).toString() + self.me.x.toString(), 10), parseInt((highestCastleCount * tradeSign).toString() + self.me.y.toString(), 10));
+          return self.proposeTrade(parseInt((self.castleAmount * tradeSign).toString() + self.me.x.toString(), 10), parseInt((self.castleAmount * tradeSign).toString() + self.me.y.toString(), 10));
         }
       }
     } else if (self.step === 4) {
       // things to do on the fourth turn only
       // if there are 3 castles we check the last positions here
-      let highestCastleCount = selfOffer[0].toString();
-      highestCastleCount = parseInt(highestCastleCount.substring(0, isNegative), 10);
-      if (highestCastleCount > 2) {
+      if (self.castleAmount > 2) {
         if (self.castleNumber === 1 || self.castleNumber === 3) {
           let offerXString = selfOffer[0].toString();
           let offerYString = selfOffer[1].toString();
           self.castleLocations[1] = [parseInt(offerXString.substring(isNegative), 10), parseInt(offerYString.substring(isNegative), 10)];
         }
       }
-      self.log(self.castleLocations);
     } else if (self.step === 5) {
       // things to do on the fifth turn only
       // check the map and calculate the position of opposing castles
-      let highestCastleCount = selfOffer[0].toString();
-      highestCastleCount = parseInt(highestCastleCount.substring(0, isNegative), 10);
-
       const vertical = structureHelper.isVertical(self.map);
       if (vertical) {
-        self.log('vertical');
         if (self.castleLocations[0][0] >= 0) {
           self.oppCastleLocations[0][0] = self.map[0].length - self.castleLocations[0][0];
           self.oppCastleLocations[0][1] = self.castleLocations[0][1];
@@ -89,7 +84,6 @@ var castleHelper = {
           self.oppCastleLocations[2][1] = self.castleLocations[2][1];
         }
       } else {
-        self.log('horizontal');
         if (self.castleLocations[0][1] >= 0) {
           self.oppCastleLocations[0][0] = self.castleLocations[0][0];
           self.oppCastleLocations[0][1] = self.map.length - self.castleLocations[0][1];
@@ -103,10 +97,23 @@ var castleHelper = {
           self.oppCastleLocations[2][1] = self.map.length - self.castleLocations[2][1];
         }
       }
-      self.log(self.oppCastleLocations);
     }
 
-    // Build crusadors
+    if (castleTalkValue >= 64) {
+      // a unit should send this to locate enemies
+      let position = castleTalkValue - 64;
+      let xPos = position % 8;
+      let yPos = (position - xPos) / 8;
+
+      self.objectiveMap.push({code: 1, frag: true, x: xPos, y: yPos});
+
+      if (self.castleNumber === self.castleAmount) {
+        // last castle will reset the signal
+        self.castleTalk(0);
+      }
+    }
+
+    // Build pilgrims
     if(!self.spawnedPilgrims){
       self.spawnedPilgrims = 0;
     }

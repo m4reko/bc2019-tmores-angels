@@ -21,8 +21,10 @@ class MyRobot extends BCAbstractRobot {
           [-1, -1],
           [-1, -1]
         ];
+        this.castleAmount = 0;
         this.castleNumber = null;
-        this.objectiveMap = null;
+        this.objectiveMap = [];
+        this.mapFragments = 8;
         this.helper = null;
         this.step = 0;
     }
