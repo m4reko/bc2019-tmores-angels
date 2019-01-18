@@ -1,5 +1,8 @@
+import nav from './nav.js';
 
 var unitHelper = {
+  nav: nav,
+
   directions: [
     {x:-1, y:0},
     {x:1, y:0},

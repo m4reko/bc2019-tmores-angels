@@ -1,5 +1,8 @@
+import nav from './nav.js';
 
 var structureHelper = {
+  nav: nav,
+
   // I halp too
   build: () => {
     // I bild :D
