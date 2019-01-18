@@ -2,7 +2,7 @@
 # Edit at https://www.gitignore.io/?templates=node,linux,macos,windows
 
 # BC19 files
-compiled_bot.js
+compiled_bot*.js
 replay.bc19
 
 ### Linux ###

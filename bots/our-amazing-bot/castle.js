@@ -99,6 +99,7 @@ var castleHelper = {
       }
     }
 
+<<<<<<< HEAD
     if (castleTalkValue >= 64) {
       // a unit should send this to locate enemies
       let position = castleTalkValue - 64;
@@ -115,9 +116,14 @@ var castleHelper = {
 
     // Build pilgrims
     if(!self.spawnedPilgrims){
+=======
+    // Build crusadors
+    if(!self.spawnedPilgrims && !self.spawnedCrusaders){
+>>>>>>> 8b4806f8bc62da16728328f7f2b758198b29d317
       self.spawnedPilgrims = 0;
+      self.spawnedCrusaders = 0;
     }
-    if (self.karbonite >= 20 && self.spawnedPilgrims < 10) {
+    if (self.karbonite >= 20 && self.spawnedPilgrims < 4) {
       self.spawnedPilgrims++;
       let location = {x: self.me.x, y: self.me.y};
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
@@ -125,6 +131,15 @@ var castleHelper = {
 
       self.log('Building a pilgrim at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
       return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
+    }
+    else if (self.karbonite >= 20 && self.spawnedCrusaders < 4) {
+      self.spawnedCrusaders++;
+      let location = {x: self.me.x, y: self.me.y};
+      let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
+      let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+
+      self.log('Building a crusader at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
+      return self.buildUnit(SPECS.CRUSADER, randomDirection.x, randomDirection.y);
     }
 
     // attack enemies
