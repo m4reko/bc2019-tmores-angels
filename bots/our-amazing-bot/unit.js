@@ -11,10 +11,12 @@ var unitHelper = {
     {x:-1, y:-1}
   ],
 
+  // Gives squared distance
   sqDist : (start, end) => {
     return Math.pow(start.x - end.x, 2) + Math.pow(start.y - end.y, 2);
   },
 
+  // True if loc is passable, else False
   isPassable: (loc, fullMap, robotMap) => {
     const {x, y} = loc;
     const mapLen = fullMap.length;
@@ -29,6 +31,7 @@ var unitHelper = {
     }
   },
 
+  // Gives the closest karbonite location
   getClosestKarbonite : (loc, karbMap) => {
       const mapLen = karbMap.length;
       let closestLoc = null;
@@ -44,6 +47,7 @@ var unitHelper = {
       return closestLoc;
   },
 
+  // Gives a random karbonite location
   getRandomKarbonite : (loc, karbMap) => {
       const mapLen = karbMap.length;
       let locations = [];
@@ -110,10 +114,65 @@ var unitHelper = {
     return distMap;
   },
 
-  //Get next direction according to distance map
+  // Gives closest position where a church could be built
+  getOptimalChurchLocation: (location, churchProspectMap) =>{
+    let topValue = 0;
+    let result = {x:0, y:0};
+
+    for(var y=0; y<churchProspectMap.length;y++){
+      for(var x=0; x<churchProspectMap.length;x++){
+        if(churchProspectMap[y][x] == topValue){
+          if(unitHelper.sqDist({x:x, y:y}, location) < unitHelper.sqDist(result, location)){
+            result = {x:x, y:y};
+          }
+        }else if(churchProspectMap[y][x] > topValue){
+          topValue = churchProspectMap[y][x];
+          result = {x:x, y:y}
+        }
+      }
+    }
+    return result;
+  },
+
+  // Create a 2d map with values, higher value is better position for churches
+  createChurchProspectMap: (fullMap, karboniteMap, fuelMap) =>{
+    let churchProspectMap = [];
+
+    for(var y=0; y<fullMap.length;y++){
+      churchProspectMap[y] = [];
+    }
+
+    for(var y=0; y<fullMap.length;y++){
+      for(var x=0; x<fullMap.length;x++){
+        if(fullMap[y][x] && !karboniteMap[y][x] && !fuelMap[y][x]){
+          churchProspectMap[y][x] = (unitHelper.getNearbyResourceLocations({x:x, y:y}, karboniteMap, fuelMap, 4)).length;
+        }else{
+          churchProspectMap[y][x] = -1;
+        }
+      }
+    }
+    return churchProspectMap;
+  },
+
+  // Get all positions for resources within a square radius
+  getNearbyResourceLocations: (loc, karboniteMap, fuelMap, radius) => {
+    let resourceLocations = [];
+    for(var y = loc.y-radius; y<=loc.y+radius; y++){
+      for(var x = loc.x-radius; x<=loc.x+radius; x++){
+        if(karboniteMap[y] && karboniteMap[y][x]){
+          resourceLocations.push( { x:x, y:y, resource:'karbonite'} );
+        }else if(fuelMap[y] && fuelMap[y][x]){
+          resourceLocations.push( { x:x, y:y, resource:'fuel'} );
+        }
+      }
+    }
+    return resourceLocations;
+  },
+
+  //Get next direction according to a distance map
   getNextDirection: (loc, range, distMap) => {
     let currentValue = 1000;
-    let currentLocation = {};
+    let currentLocation = {x:0, y:0};
 
     // Test all positions in range and find the one closest to 0
     for(var y = loc.y-range; y<=loc.y+range; y++){
