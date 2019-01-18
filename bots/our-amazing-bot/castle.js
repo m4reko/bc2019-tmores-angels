@@ -99,7 +99,6 @@ var castleHelper = {
       }
     }
 
-<<<<<<< HEAD
     if (castleTalkValue >= 64) {
       // a unit should send this to locate enemies
       let position = castleTalkValue - 64;
@@ -115,11 +114,7 @@ var castleHelper = {
     }
 
     // Build pilgrims
-    if(!self.spawnedPilgrims){
-=======
-    // Build crusadors
     if(!self.spawnedPilgrims && !self.spawnedCrusaders){
->>>>>>> 8b4806f8bc62da16728328f7f2b758198b29d317
       self.spawnedPilgrims = 0;
       self.spawnedCrusaders = 0;
     }
@@ -143,7 +138,7 @@ var castleHelper = {
     }
 
     // attack enemies
-    const enemies = self.getVisibleRobots().map(r => r.team !== team);
+    const enemies = self.getVisibleRobots().filter(r => r.team !== team);
     if (enemies.length > 0) {
       let shortestDist = Infinity;
       let closestEnemy = enemies[0];
