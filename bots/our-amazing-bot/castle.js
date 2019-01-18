@@ -28,7 +28,7 @@ var castleHelper = {
       // check castle locations
       if (self.castleNumber === 1) {
         self.castleLocations[0] = [self.me.x, self.me.y];
-        self.castleAmount = selfOffer[0];
+        self.castleAmount = selfOffer[0] * tradeSign;
         return self.proposeTrade(parseInt(selfOffer[0].toString() + self.me.x.toString(), 10), parseInt(selfOffer[0].toString() + self.me.y.toString(), 10));
       } else {
         let offerXString = selfOffer[0].toString();
@@ -72,29 +72,29 @@ var castleHelper = {
       const vertical = structureHelper.isVertical(self.map);
       if (vertical) {
         if (self.castleLocations[0][0] >= 0) {
-          self.oppCastleLocations[0][0] = self.map[0].length - self.castleLocations[0][0];
+          self.oppCastleLocations[0][0] = self.map[0].length - (self.castleLocations[0][0] + 1);
           self.oppCastleLocations[0][1] = self.castleLocations[0][1];
         }
         if (self.castleLocations[1][0] >= 0) {
-          self.oppCastleLocations[1][0] = self.map[0].length - self.castleLocations[1][0];
+          self.oppCastleLocations[1][0] = self.map[0].length - (self.castleLocations[1][0] + 1);
           self.oppCastleLocations[1][1] = self.castleLocations[1][1];
         }
         if (self.castleLocations[2][0] >= 0) {
-          self.oppCastleLocations[2][0] = self.map[0].length - self.castleLocations[2][0];
+          self.oppCastleLocations[2][0] = self.map[0].length - (self.castleLocations[2][0] + 1);
           self.oppCastleLocations[2][1] = self.castleLocations[2][1];
         }
       } else {
         if (self.castleLocations[0][1] >= 0) {
           self.oppCastleLocations[0][0] = self.castleLocations[0][0];
-          self.oppCastleLocations[0][1] = self.map.length - self.castleLocations[0][1];
+          self.oppCastleLocations[0][1] = self.map.length - (self.castleLocations[0][1] + 1);
         }
         if (self.castleLocations[1][1] >= 0) {
           self.oppCastleLocations[1][0] = self.castleLocations[1][0];
-          self.oppCastleLocations[1][1] = self.map.length - self.castleLocations[1][1];
+          self.oppCastleLocations[1][1] = self.map.length - (self.castleLocations[1][1] + 1);
         }
         if (self.castleLocations[2][1] >= 0) {
           self.oppCastleLocations[2][0] = self.castleLocations[2][0];
-          self.oppCastleLocations[2][1] = self.map.length - self.castleLocations[2][1];
+          self.oppCastleLocations[2][1] = self.map.length - (self.castleLocations[2][1] + 1);
         }
       }
     }
