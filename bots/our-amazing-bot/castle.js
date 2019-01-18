@@ -107,8 +107,9 @@ var castleHelper = {
     }
 
     // Build crusadors
-    if(!self.spawnedPilgrims){
+    if(!self.spawnedPilgrims && !self.spawnedCrusaders){
       self.spawnedPilgrims = 0;
+      self.spawnedCrusaders = 0;
     }
     if (self.karbonite >= 20 && self.spawnedPilgrims < 4) {
       self.spawnedPilgrims++;
@@ -119,11 +120,7 @@ var castleHelper = {
       self.log('Building a pilgrim at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
       return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
     }
-
-    if(!self.spawnedCrusaders){
-      self.spawnedCrusaders = 0;
-    }
-    if (self.karbonite >= 20 && self.spawnedCrusaders < 5) {
+    else if (self.karbonite >= 20 && self.spawnedCrusaders < 4) {
       self.spawnedCrusaders++;
       let location = {x: self.me.x, y: self.me.y};
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
@@ -133,7 +130,23 @@ var castleHelper = {
       return self.buildUnit(SPECS.CRUSADER, randomDirection.x, randomDirection.y);
     }
 
+    // attack enemies
+    const enemies = self.getVisibleRobots().map(r => r.team !== team);
+    if (enemies.length > 0) {
+      let shortestDist = Infinity;
+      let closestEnemy = enemies[0];
+      for (const enemy of enemies) {
+        let dist = structureHelper.nav.sqDist({x: self.me.x, y: self.me.y}, {x: enemy.x, y: enemy.y});
+        if (dist < shortestDist) {
+          shortestDist = dist;
+          closestEnemy = enemy;
+        }
+      }
 
+      return self.attack(closestEnemy.x - self.me.x, closestEnemy.y - self.me.y);
+    }
+
+    // no action
     return null;
   }
 };

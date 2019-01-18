@@ -1,6 +1,9 @@
+import nav from './nav.js';
 import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var unitHelper = {
+  nav: nav,
+
   directions: [
     {x:-1, y:0},
     {x:1, y:0},
