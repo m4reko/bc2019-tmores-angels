@@ -31,6 +31,22 @@ var unitHelper = {
     }
   },
 
+  // Gives the closest karbonite location not occupied by any robot (can only see within view of robot)
+  getClosestUnoccupiedKarbonite : (loc, karbMap, robotMap) => {
+    const mapLen = karbMap.length;
+    let closestLoc = null;
+    let closestDist = 100000; // Large number;
+    for (let y = 0; y < mapLen; y++) {
+        for (let x = 0; x < mapLen; x++) {
+            if (karbMap[y][x] && unitHelper.sqDist({x,y}, loc) < closestDist && robotMap[y][x] < 1) {
+                closestDist = unitHelper.sqDist({x,y}, loc);
+                closestLoc = {x,y};
+            }
+        }
+    }
+    return closestLoc;
+  },
+
   // Gives the closest karbonite location
   getClosestKarbonite : (loc, karbMap) => {
       const mapLen = karbMap.length;

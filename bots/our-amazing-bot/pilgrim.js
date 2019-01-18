@@ -22,7 +22,10 @@ var pilgrimHelper = {
     // Current positions
     let location = {x: self.me.x, y: self.me.y};
     let randomKarb = unitHelper.getRandomKarbonite(location, self.getKarboniteMap());
+    let closestKarbNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
     let randomFuel = unitHelper.getRandomKarbonite(location, self.getFuelMap());
+    let closestFuelNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
+
     let distanceToDestination = null;
 
     if(self.destination){
@@ -43,10 +46,10 @@ var pilgrimHelper = {
         self.log(self.destination);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }else if(self.task == "mine_karbonite"){
-        self.destination = randomKarb; // Set random Karbonite source as first destination
+        self.destination = closestKarbNotOccupied; // Set closest Karbonite source as first destination
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }else if(self.task == "mine_fuel"){
-        self.destination = randomKarb; // Set random Karbonite source as first destination
+        self.destination = closestFuelNotOccupied; // Set random Karbonite source as first destination
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
       distanceToDestination = unitHelper.sqDist(location, self.destination);
@@ -57,10 +60,10 @@ var pilgrimHelper = {
       if(distanceToDestination <= 2){
         if(self.fuel < self.karbonite){
           self.task = "mine_fuel"
-          self.destination = randomFuel; // Set random Karbonite source as destination
+          self.destination = closestFuelNotOccupied; // Set closest Karbonite source as destination
         }else{
           self.task = "mine_karbonite"
-          self.destination = randomKarb; // Set random Karbonite source as destination
+          self.destination = closestKarbNotOccupied; // Set closest Karbonite source as destination
         }
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
         self.log("Leaving all karbonite and fuel to castle! Going back to the mine.");
@@ -89,7 +92,7 @@ var pilgrimHelper = {
       }else if(distanceToDestination <= 4){
         // Check if mining spot is occupied, in that case go to new random karbonite source
         if(self.getVisibleRobotMap()[self.destination.y][self.destination.x]){
-          self.destination = randomKarb; // Set random Karbonite source as destination
+          self.destination = closestKarbNotOccupied; // Set closest Karbonite source as destination
           self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
           self.log("Going to new karbonite source.");
         }
@@ -110,7 +113,7 @@ var pilgrimHelper = {
       }else if(distanceToDestination <= 4){
         // Check if mining spot is occupied, in that case go to new random karbonite source
         if(self.getVisibleRobotMap()[self.destination.y][self.destination.x]){
-          self.destination = randomFuel; // Set random Karbonite source as destination
+          self.destination = closestFuelNotOccupied; // Set closest Fuel source as destination
           self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
           self.log("Going to new fuel source.");
         }
@@ -118,15 +121,24 @@ var pilgrimHelper = {
     }else if(self.task == "build_church"){
       self.log(distanceToDestination + " from future church location");
       if(distanceToDestination <= 2){
-        self.log("Building church! Direction: {1,0}");
-        self.task = "return_home" // Return home after church is built
-        self.destination = self.castle;
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-        return self.buildUnit(
-          SPECS.CHURCH,
-          1,
-          0
-        );
+
+        let buildDirections = [{x:0, y:1}, {x:1, y:0}, {x:0, y:-1}, {x:-1, y:0}];
+        // Find direction to build to
+        for(var i=0; i<buildDirections.length; i++){
+          if(unitHelper.isPassable({ x:buildDirections[i].x, y:buildDirections[i].y}, self.map, self.getVisibleRobotMap())){
+            self.log("Building church! Direction: {1,0}");
+            self.task = "return_home" // Return home after church is built
+            self.destination = self.castle;
+            self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+
+            return self.buildUnit(
+              SPECS.CHURCH,
+              buildDirections[i].x,
+              buildDirections[i].y
+            );
+          }
+        }
+
       }else if(distanceToDestination <= 4){
         if(self.getVisibleRobotMap()[self.destination.y][self.destination.x]){
           self.churchProspectMap[self.destination.y][self.destination.x] = -1;
