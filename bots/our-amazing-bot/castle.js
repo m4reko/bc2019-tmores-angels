@@ -110,7 +110,7 @@ var castleHelper = {
     if(!self.spawnedPilgrims){
       self.spawnedPilgrims = 0;
     }
-    if (self.karbonite >= 20 && self.spawnedPilgrims < 10) {
+    if (self.karbonite >= 20 && self.spawnedPilgrims < 5) {
       self.spawnedPilgrims++;
       let location = {x: self.me.x, y: self.me.y};
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
