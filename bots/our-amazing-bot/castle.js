@@ -120,6 +120,23 @@ var castleHelper = {
       return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
     }
 
+    // attack enemies
+    const enemies = self.getVisibleRobots().map(r => r.team !== team);
+    if (enemies.length > 0) {
+      let shortestDist = Infinity;
+      let closestEnemy = enemies[0];
+      for (enemy of enemies) {
+        let dist = structureHelper.nav.sqDist({x: self.me.x, y: self.me.y}, {x: enemy.x, y: enemy.y});
+        if (dist < shortestDist) {
+          shortestDist = dist;
+          closestEnemy = enemy;
+        }
+      }
+
+      return self.attack(closestEnemy.x - self.me.x, closestEnemy.y - self.me.y);
+    }
+
+    // no action
     return null;
   }
 };
