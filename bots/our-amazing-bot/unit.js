@@ -1,3 +1,4 @@
+import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var unitHelper = {
   directions: [
@@ -29,6 +30,42 @@ var unitHelper = {
     } else {
         return true;
     }
+  },
+
+  reflect: (loc, fullMap, isHorizontalReflection) => {
+      const mapLen = fullMap.length-1;
+      const hReflect = {
+          x: loc.x,
+          y: mapLen - loc.y,
+      };
+      const vReflect = {
+          x: mapLen - loc.y,
+          y: loc.y,
+      };
+
+      if (isHorizontalReflection) {
+          return fullMap[hReflect.y][hReflect.x] ? hReflect : vReflect;
+      } else {
+          return fullMap[vReflect.y][vReflect.x] ? vReflect : hReflect;
+      }
+  },
+
+  getClosestAttackableOpponent : (me, robots) => {
+    var closestRobot = false;
+    var shortestDist = 1000;
+    for(var i=0; i<robots.length; i++){
+      let r = robots[i];
+      const dist = unitHelper.sqDist(r, me);
+      if (r.team !== me.team
+          && SPECS.UNITS[me.unit].ATTACK_RADIUS[0] <= dist
+          && dist <= SPECS.UNITS[me.unit].ATTACK_RADIUS[1] ){
+          if(dist<shortestDist){
+            closestRobot = r;
+            shortestDist = dist;
+          }
+      }
+    }
+    return closestRobot;
   },
 
   // Gives the closest karbonite location not occupied by any robot (can only see within view of robot)
