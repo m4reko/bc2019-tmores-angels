@@ -125,7 +125,7 @@ var castleHelper = {
     if (enemies.length > 0) {
       let shortestDist = Infinity;
       let closestEnemy = enemies[0];
-      for (enemy of enemies) {
+      for (const enemy of enemies) {
         let dist = structureHelper.nav.sqDist({x: self.me.x, y: self.me.y}, {x: enemy.x, y: enemy.y});
         if (dist < shortestDist) {
           shortestDist = dist;
