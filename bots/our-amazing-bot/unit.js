@@ -225,6 +225,12 @@ var unitHelper = {
     return resourceLocations;
   },
 
+  getCastleGuardPosition: (loc, castle, fullMap)=>{
+
+    
+
+  }
+
   //Get next direction according to a distance map
   getNextDirection: (loc, range, distMap) => {
     let currentValue = 1000;

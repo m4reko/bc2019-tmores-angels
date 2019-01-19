@@ -2,13 +2,23 @@ import unitHelper from './unit.js';
 
 var crusaderHelper = {
   turn: self => {
+    // On the first turn, find out our base
+    if (!self.castle) {
+        self.castle = self.getVisibleRobots()
+        .filter(robot => robot.team === self.me.team && robot.unit === SPECS.CASTLE)[0];
+    }
+
     if(!self.task){
-      self.task = "attack_opponent";
+      if(self.me.id%2){
+        self.task = "attack_opponent";
+      }else{
+        self.task = "guard_castle";
+      }
     }
 
     // Current positions
     let location = {x: self.me.x, y: self.me.y};
-    let distanceToDestination = -1;
+    let distanceToDestination = 1000;
     let randomKarb = unitHelper.getRandomKarbonite(location, self.getKarboniteMap());
 
     if(self.destination){
@@ -23,6 +33,13 @@ var crusaderHelper = {
         self.log(self.destination);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
+      else if(self.task == "guard_castle"){
+        self.log("Adding guard position as destination!");
+        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map);
+        self.log(self.destination);
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+      }
+
       distanceToDestination = unitHelper.sqDist(location, self.destination);
     }
 
@@ -34,8 +51,17 @@ var crusaderHelper = {
     if(closestOpponent){
       self.log("Attack opponent!");
       return self.attack(closestOpponent.x - location.x, closestOpponent.y - location.y);
+    }else{
+      for(var i = 0; i<nearbyRobots.length; i++){
+        if(nearbyRobots[i].team != self.me.team){
+          self.destination = nearbyRobots[i];
+          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+          break;
+        }
+      }
     }
 
+    // If at destination and no enemy to attack
     if(distanceToDestination<=2 && !closestOpponent){
       self.destination = randomKarb;
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());

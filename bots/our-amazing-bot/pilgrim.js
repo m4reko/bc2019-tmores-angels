@@ -26,12 +26,10 @@ var pilgrimHelper = {
     let randomFuel = unitHelper.getRandomKarbonite(location, self.getFuelMap());
     let closestFuelNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
 
-    let distanceToDestination = null;
+    let distanceToDestination = 10000;
 
     if(self.destination){
       distanceToDestination = unitHelper.sqDist(location, self.destination);
-    }else{
-      distanceToDestination = -1;
     }
 
     if(!self.churchProspectMap){
