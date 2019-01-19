@@ -10,7 +10,7 @@ var crusaderHelper = {
     }
 
     if(!self.task){
-      if(self.me.id%3){
+      if(self.me.id%3 == 0){
         self.task = "guard_castle";
       }else{
         self.task = "attack_opponent";
