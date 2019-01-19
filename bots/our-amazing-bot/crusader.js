@@ -1,4 +1,5 @@
 import unitHelper from './unit.js';
+import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var crusaderHelper = {
   turn: self => {
@@ -9,17 +10,17 @@ var crusaderHelper = {
     }
 
     if(!self.task){
-      if(self.me.id%2){
-        self.task = "attack_opponent";
-      }else{
+      if(self.me.id%3){
         self.task = "guard_castle";
+      }else{
+        self.task = "attack_opponent";
       }
     }
 
     // Current positions
     let location = {x: self.me.x, y: self.me.y};
     let distanceToDestination = 1000;
-    let randomKarb = unitHelper.getRandomKarbonite(location, self.getKarboniteMap());
+    let randomKarb = unitHelper.getRandomKarbonite(self.getKarboniteMap());
 
     if(self.destination){
       distanceToDestination = unitHelper.sqDist(location, self.destination);
@@ -27,16 +28,14 @@ var crusaderHelper = {
 
     // Set new destination if none exist
     if(!self.destination || !self.distanceMap){
-      if(self.task == "attack_opponent"){
+      if(self.task === "attack_opponent"){
         self.log("Adding mirrored position as destination!");
         self.destination = unitHelper.reflect(self.me, self.getPassableMap(), self.me.id % 2 === 0);
-        self.log(self.destination);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
-      else if(self.task == "guard_castle"){
+      else if(self.task === "guard_castle"){
         self.log("Adding guard position as destination!");
-        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map);
-        self.log(self.destination);
+        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
 
@@ -52,20 +51,34 @@ var crusaderHelper = {
       self.log("Attack opponent!");
       return self.attack(closestOpponent.x - location.x, closestOpponent.y - location.y);
     }else{
+      // Walk towards enemies within view range
       for(var i = 0; i<nearbyRobots.length; i++){
         if(nearbyRobots[i].team != self.me.team){
           self.destination = nearbyRobots[i];
           self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-          break;
+          let nextDirection = unitHelper.getNextDirection(location, 2, self.distanceMap);
+          return self.move(nextDirection.x, nextDirection.y);
         }
       }
     }
 
-    // If at destination and no enemy to attack
-    if(distanceToDestination<=2 && !closestOpponent){
-      self.destination = randomKarb;
-      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+    if(self.task === "guard_castle"){
+      // If at destination and no enemy to attack or walk towards,
+      // go to new guard position
+      if(distanceToDestination<=2){
+        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+      }
+    }else if(self.task === "attack_opponent"){
+      // If at destination and no enemy to attack or walk towards,
+      // go to random karbonite source just for fun
+      if(distanceToDestination<=2){
+        self.log("Adding random karb as destination!");
+        self.destination = randomKarb;
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+      }
     }
+
 
     // Walk towards destination
     let nextDirection = unitHelper.getNextDirection(location, 2, self.distanceMap);

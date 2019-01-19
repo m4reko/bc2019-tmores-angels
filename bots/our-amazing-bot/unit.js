@@ -104,7 +104,7 @@ var unitHelper = {
   },
 
   // Gives a random karbonite location
-  getRandomKarbonite : (loc, karbMap) => {
+  getRandomKarbonite : (karbMap) => {
       const mapLen = karbMap.length;
       let locations = [];
       for (let y = 0; y < mapLen; y++) {
@@ -225,9 +225,18 @@ var unitHelper = {
     return resourceLocations;
   },
 
-  getCastleGuardPosition: (loc, castle, fullMap)=>{
-
-
+  getCastleGuardPosition: (castle, fullMap)=>{
+    let guardPositions = [];
+    for(var y=castle.y-4; y<castle.y+4; y++){
+      for(var x=castle.x-4; x<castle.x+4; x++){
+        if(fullMap[y] && fullMap[y][x] &&
+          (x>castle.x+1 || x<castle.x-1) &&
+          (y>castle.y+1 || y<castle.y-1)){
+            guardPositions.push({x:x, y:y});
+        }
+      }
+    }
+    return guardPositions[Math.floor(Math.random() * guardPositions.length)]
   },
 
   //Get next direction according to a distance map

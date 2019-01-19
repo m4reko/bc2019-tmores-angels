@@ -56,9 +56,9 @@ var pilgrimHelper = {
 
     // Current positions
     let location = {x: self.me.x, y: self.me.y};
-    let randomKarb = unitHelper.getRandomKarbonite(location, self.getKarboniteMap());
+    let randomKarb = unitHelper.getRandomKarbonite(self.getKarboniteMap());
     let closestKarbNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
-    let randomFuel = unitHelper.getRandomKarbonite(location, self.getFuelMap());
+    let randomFuel = unitHelper.getRandomKarbonite(self.getFuelMap());
     let closestFuelNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
 
     let distanceToDestination = 10000;
