@@ -9,13 +9,48 @@ var pilgrimHelper = {
         .filter(robot => robot.team === self.me.team && robot.unit === SPECS.CASTLE)[0];
     }
 
+    // for the signaling to work in 1 turn there can at most be 6 tasks
+    const tasks = {
+        0: 'mine_karbonite',
+        1: 'mine_fuel',
+        2: 'build_church',
+        3: 'scout'
+    };
+
+    if (self.step === 1) {
+      if (self.isRadioing(self.castle)) {
+        if (self.castle.signal_radius === 1) {
+          let signal = self.castle.signal;
+          signal = signal.toString();
+
+          if (!self.task) {
+            self.task = tasks[signal];
+          }
+        }
+      }
+    }
+
     if(!self.task){
       if(self.me.id%5 == 0){
-        self.task = "build_church";
+        self.task = tasks[2];
       }else if(self.me.id%2 == 0){
-        self.task = "mine_karbonite";
+        self.task = tasks[0];
       }else{
-        self.task = "mine_fuel";
+        self.task = tasks[1];
+      }
+    }
+
+    if (self.step === 1 && self.task === 'scout') {
+      // create a danger map
+      // this will show the range of the opposing castles as dangerous areas that should be avoided
+      if (!self.dangerMap) {
+        let dangerMap = [];
+        let map = self.map;
+        for (const spot in map) {
+
+        }
+        self.dangerMap = dangerMap;
+
       }
     }
 

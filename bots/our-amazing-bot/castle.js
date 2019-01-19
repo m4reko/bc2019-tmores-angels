@@ -118,7 +118,7 @@ var castleHelper = {
       self.spawnedPilgrims = 0;
       self.spawnedCrusaders = 0;
     }
-    if (self.karbonite >= 20 && self.spawnedPilgrims < 4) {
+    if (self.karbonite >= 20 && self.spawnedPilgrims < 6) {
       self.spawnedPilgrims++;
       let location = {x: self.me.x, y: self.me.y};
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
@@ -127,18 +127,10 @@ var castleHelper = {
       self.log('Building a pilgrim at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
       return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
     }
-    else if (self.karbonite >= 20 && self.spawnedCrusaders < 4) {
-      self.spawnedCrusaders++;
-      let location = {x: self.me.x, y: self.me.y};
-      let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
-      let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
 
-      self.log('Building a crusader at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
-      return self.buildUnit(SPECS.CRUSADER, randomDirection.x, randomDirection.y);
-    }
-
-    // attack enemies
+    // defend
     const enemies = self.getVisibleRobots().filter(r => r.team !== team);
+    const allies = self.getVisibleRobots().filter(r => r.team === team && r.type === SPECS.PREACHER);
     if (enemies.length > 0) {
       let shortestDist = Infinity;
       let closestEnemy = enemies[0];
@@ -149,8 +141,48 @@ var castleHelper = {
           closestEnemy = enemy;
         }
       }
+      if (allies.length < 2) {
+        if (self.karbonite >= 30) {
+          let location = {x: self.me.x, y: self.me.y};
+          let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
+          let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
 
-      return self.attack(closestEnemy.x - self.me.x, closestEnemy.y - self.me.y);
+          self.log('Building a preacher at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
+
+          self.signal(parseInt(closestEnemy.x.toString() + closestEnemy.y.toString(), 10), 1);
+          return self.buildUnit(SPECS.PREACHER, randomDirection.x, randomDirection.y);
+        }
+      } else {
+        return self.attack(closestEnemy.x - self.me.x, closestEnemy.y - self.me.y);
+      }
+    }
+
+    if (!self.resourceNumber || !self.resourceMap) {
+      self.resourceNumber = 0;
+      self.resourceMap = [];
+      for (let y = 0; y < self.map.length; y += 8) {
+        let currentRow = [];
+        for (let x = 0; x < self.map.length; x += 8) {
+          let currentCell = false;
+          for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+              if (y + i >= self.map.length || x + j >= self.map.length) continue;
+              currentCell = self.karbonite_map[y + i][x + j] || self.fuel_map[y + i][x + j];
+            }
+          }
+          currentRow.push(currentCell);
+        }
+        self.resourceMap.push(currentRow);
+      }
+    }
+    if (self.karbonite >= 50 && self.spawnedCrusaders < 4) {
+      self.spawnedCrusaders++;
+      let location = {x: self.me.x, y: self.me.y};
+      let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
+      let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+
+      self.log('Building a crusader at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
+      return self.buildUnit(SPECS.CRUSADER, randomDirection.x, randomDirection.y);
     }
 
     // no action
