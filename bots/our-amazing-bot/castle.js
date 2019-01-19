@@ -3,6 +3,10 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var castleHelper = {
   turn: self => {
+    if(!self.castleAmount){
+      // Just setting castle amount to 1 before we counted them
+      self.castleAmount = 1;
+    }
     // we do stuff
     const team = self.me.team;
     let selfOffer = self.last_offer[team];
@@ -118,7 +122,7 @@ var castleHelper = {
       self.spawnedPilgrims = 0;
       self.spawnedCrusaders = 0;
     }
-    if (self.karbonite >= 20 && self.spawnedPilgrims < 6) {
+    if (self.karbonite >= 20 && self.spawnedPilgrims < (6/self.castleAmount)) {
       self.spawnedPilgrims++;
       let location = {x: self.me.x, y: self.me.y};
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
@@ -127,6 +131,16 @@ var castleHelper = {
       self.log('Building a pilgrim at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
       return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
     }
+    if (self.karbonite >= 50 && self.spawnedCrusaders < (6/self.castleAmount)) {
+      self.spawnedCrusaders++;
+      let location = {x: self.me.x, y: self.me.y};
+      let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
+      let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+
+      self.log('Building a crusader at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
+      return self.buildUnit(SPECS.CRUSADER, randomDirection.x, randomDirection.y);
+    }
+
 
     // defend
     const enemies = self.getVisibleRobots().filter(r => r.team !== team);
@@ -175,16 +189,6 @@ var castleHelper = {
         self.resourceMap.push(currentRow);
       }
     }
-    if (self.karbonite >= 50 && self.spawnedCrusaders < 4) {
-      self.spawnedCrusaders++;
-      let location = {x: self.me.x, y: self.me.y};
-      let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
-      let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
-
-      self.log('Building a crusader at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
-      return self.buildUnit(SPECS.CRUSADER, randomDirection.x, randomDirection.y);
-    }
-
     // no action
     return null;
   }
