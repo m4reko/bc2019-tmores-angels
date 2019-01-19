@@ -131,7 +131,7 @@ var castleHelper = {
       self.log('Building a pilgrim at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
       return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
     }
-    if (self.karbonite >= 50 && self.spawnedCrusaders < (6/self.castleAmount)) {
+    if (self.karbonite >= 50 && self.spawnedCrusaders < (10/self.castleAmount)) {
       self.spawnedCrusaders++;
       let location = {x: self.me.x, y: self.me.y};
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
