@@ -91,7 +91,7 @@ var preacherHelper = {
       freeSpotNextToCastle = {x: possibleDirections[0].x + self.castle.x, y: possibleDirections[0].y + self.castle.y};
     }else if(possibleDirections.length>0){
       // destination to steps away from the castle if only 1 or 2 spots is available
-      spotNextToCastle = {x: possibleDirections[0].x + self.castle.x, y: possibleDirections[0].y + self.castle.y};
+      let spotNextToCastle = {x: possibleDirections[0].x + self.castle.x, y: possibleDirections[0].y + self.castle.y};
       let directionsFromNextToCastle = unitHelper.getPossibleDirections(spotNextToCastle, self.map, self.getVisibleRobotMap());
       if(directionsFromNextToCastle.length>0){
         freeSpotNextToCastle = {x: directionsFromNextToCastle[0].x + self.castle.x, y: directionsFromNextToCastle[0].y + self.castle.y};

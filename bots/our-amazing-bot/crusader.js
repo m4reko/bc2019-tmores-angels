@@ -7,6 +7,10 @@ var crusaderHelper = {
     if (!self.castle) {
         self.castle = self.getVisibleRobots()
         .filter(robot => robot.team === self.me.team && robot.unit === SPECS.CASTLE)[0];
+        if(!self.castle){
+          self.castle = self.getVisibleRobots()
+          .filter(robot => robot.team === self.me.team && robot.unit === SPECS.CHURCH)[0];
+        }
     }
 
     if(!self.task){
@@ -70,6 +74,8 @@ var crusaderHelper = {
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
     }else if(self.task === "attack_opponent"){
+      // TODO: If there is a Message from other robot saying help, go there!
+
       // If at destination and no enemy to attack or walk towards,
       // go to random karbonite source just for fun
       if(distanceToDestination<=2){
