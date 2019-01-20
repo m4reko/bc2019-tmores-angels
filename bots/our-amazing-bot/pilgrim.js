@@ -10,17 +10,31 @@ var pilgrimHelper = {
     }
 
     const macroTasks = {
-        0: 'mine',
-        1: 'scout'
+        0: 'mine_karbonite',
+        1: 'mine_fuel',
+        2: 'scout'
     };
 
     const microTasks = {
-      'mine': {
-        0: 'mine_fuel',
-        1: 'mine_karbonite',
-        2: 'build_church',
+      'mine_karbonite': {
+        0: 'mine',
+        1: 'build_church',
+        2: 'stash',
         3: 'find',
         4: 'flee'
+      },
+      'mine_fuel': {
+        0: 'mine',
+        1: 'build_church',
+        2: 'stash',
+        3: 'find',
+        4: 'flee'
+      },
+      'scout': {
+        0: 'find',
+        1: 'flee',
+        2: 'spy',
+        3: 'attack'
       }
     };
 
@@ -29,26 +43,31 @@ var pilgrimHelper = {
       if (self.isRadioing(self.castle)) {
         if (self.castle.signal_radius === 1) {
           let signal = self.castle.signal;
-          signal = signal.toString().split("").map(i => parseInt(i, 10));
+          self.log("I recieved a signal");
+          self.log("signal: " + signal);
+          signal = signal.toString().split("").map(i => parseInt(i, 10)).reverse();
           if (!self.macro && signal.length) {
-            self.macro = macroTasks[signal.pop()];
+            self.macro = macroTasks[signal.pop() - 1];
           }
-          if (signal.length > 1) {
-            initTarget = {y: signal.pop(), x: signal.pop()};
+          if (signal.length && signal.length > 1) {
+            initTarget = {x: signal.pop(), y: signal.pop()};
+            self.log("I'm going to " + initTarget.x + ", " + initTarget.y);
+            self.task = microTasks[self.macro][3];
+            self.log("my task is " + self.task);
           }
         }
       }
     }
 
     if (!self.macro) {
-      self.macro = macroTasks[0];
-    }
-    if(!self.task && self.macro === 'mine'){
-      if(self.me.id%5 == 0 && self.karbonite > 50 && self.fuel>200){
-        self.task = microTasks[self.macro][2];
-      }else if(self.me.id%2 == 0){
-        self.task = microTasks[self.macro][0];
-      }else{
+      if (self.karbonite > self.fuel) {
+        self.macro = macroTasks[0];
+      } else {
+        self.macro = macroTasks[1];
+      }
+      if (self.me.id%5 == 0 && self.karbonite > 50 && self.fuel>200) {
+        self.task = microTasks[self.macro][1];
+      } else {
         self.task = microTasks[self.macro][1];
       }
     }
@@ -69,114 +88,114 @@ var pilgrimHelper = {
 
     // Current positions
     let location = {x: self.me.x, y: self.me.y};
-    let randomKarb = unitHelper.getRandomKarbonite(self.getKarboniteMap());
-    let closestKarbNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
-    let randomFuel = unitHelper.getRandomKarbonite(self.getFuelMap());
-    let closestFuelNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
-
-    let distanceToDestination = 10000;
-
-    if (self.destination) {
-      distanceToDestination = unitHelper.sqDist(location, self.destination);
-    }
+    let destination = false;
 
     if (!self.churchProspectMap) {
       self.churchProspectMap = unitHelper.createChurchProspectMap(self.map, self.getKarboniteMap(), self.getFuelMap());
     }
 
     // Set new destination if none exist
-    if (!self.destination || !self.distanceMap) {
-      if(self.task == "build_church") {
+    if (initTarget !== null && self.task === 'find') {
+      self.destination = unitHelper.posTo12Bit(self.map, initTarget);
+    }
+    if ((!self.destination || !self.distanceMap) && (self.macro === 'mine_karbonite' || self.macro === 'mine_fuel')) {
+      if (self.task == 'build_church') {
         self.log("Adding church as destination!");
         self.destination = unitHelper.getOptimalChurchLocation(location, self.churchProspectMap);
         self.log(self.destination);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-      } else if (self.task == "mine_karbonite") {
-        self.destination = closestKarbNotOccupied; // Set closest Karbonite source as first destination
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-      } else if (self.task == "mine_fuel") {
-        self.destination = closestFuelNotOccupied; // Set random Karbonite source as first destination
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+      } else if (self.task == 'mine') {
+        if (self.macro === 'mine_karbonite') {
+          let closestKarbNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
+          self.destination = closestKarbNotOccupied;
+        } else if (self.macro === 'mine_fuel') {
+          let closestFuelNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
+          self.destination = closestFuelNotOccupied;
+        }
       }
-      distanceToDestination = unitHelper.sqDist(location, self.destination);
     }
 
-    // If returning home or returned home
-    if (self.task == "return_home") {
+    let distanceToDestination = Infinity;
+
+    if (self.destination) {
+      distanceToDestination = unitHelper.sqDist(location, self.destination);
+      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+    }
+
+    // return with mined stuff
+    if (self.destination && self.task == 'stash') {
+      self.log("I'm trying to stash at: " + self.destination.x + ", " + self.destination.y + ". I'm at: " + location.x + ", " + location.y);
       if (distanceToDestination <= 2) {
-        if (self.fuel < self.karbonite) {
-          self.task = "mine_fuel"
-          self.destination = closestFuelNotOccupied; // Set closest Karbonite source as destination
-        } else {
-          self.task = "mine_karbonite"
-          self.destination = closestKarbNotOccupied; // Set closest Karbonite source as destination
+        let oldDest = self.destination;
+        self.task = microTasks[self.macro][0];
+        if (self.macro === 'mine_karbonite') {
+          self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
+        } else if (self.macro === 'mine_fuel') {
+          self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
         }
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-        self.log("Leaving all karbonite and fuel to castle! Going back to the mine.");
-
         return self.give(
-          self.castle.x - location.x,
-          self.castle.y - location.y,
+          oldDest.x - location.x,
+          oldDest.y - location.y,
           self.me.karbonite,
           self.me.fuel
         );
       }
-    // If mining karbonite or on way to mining karbonite
-    } else if (self.task == "mine_karbonite") {
-      if (distanceToDestination === 0) {
+    }
+
+    // mine stuff
+    if (self.destination && self.task === 'mine') {
+      self.log("I'm trying to mine at: " + self.destination.x + ", " + self.destination.y + ". I'm at: " + location.x + ", " + location.y);
+      if (distanceToDestination <= 0 || (location.x === self.destination.x && location.y === self.destination.y)) {
         if (self.me.karbonite > 18 || self.me.fuel > 90) {
-          // If inventory full, go to castle
-          self.log("Inventory full. Return home.");
-          self.task = "return_home"
-          self.destination = self.castle;
+          self.task = microTasks[self.macro][2];
+          let target = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.type === SPECS.CHURCH));
+          if (!target) {
+            if (self.karbonite > 50 && self.fuel > 200) {
+              let distanceToCastle = unitHelper.sqDist(location, self.castle);
+              let distanceToChurch = unitHelper.sqDist(location, unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.type === SPECS.CHURCH)));
+              if (distanceToCastle >= 50 && distanceToChurch >= 16) {
+                self.task = microTasks[self.macro][1];
+                target = unitHelper.getOptimalChurchLocation(location, self.churchProspectMap);
+              }
+            } else {
+              target = {x: self.castle.x, y: self.castle.y};
+            }
+          }
+          if (!target) target = {x: self.castle.x, y: self.castle.y};
+          self.destination = target;
+          self.log("I'm trying to get a distance map with: " + self.destination.x + ", " + self.destination.y);
           self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
         } else {
-          // Else mine!
-          self.log("Mining 2 karbonite. Having " + self.me.karbonite);
-          return self.mine();
-        }
-      } else if(distanceToDestination <= 4) {
-        // Check if mining spot is occupied, in that case go to new random karbonite source
-        if (self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
-          self.destination = closestKarbNotOccupied; // Set closest Karbonite source as destination
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-          self.log("Going to new karbonite source.");
-        }
-      }
-    } else if (self.task == "mine_fuel") {
-      if (distanceToDestination === 0) {
-        if (self.me.karbonite > 18 || self.me.fuel > 90) {
-          // If inventory full, go to castle
-          self.log("Inventory full. Return home.");
-          self.task = "return_home"
-          self.destination = self.castle;
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-        } else {
-          // Else mine!
-          self.log("Mining 10 fuel. Now has " + self.me.fuel);
           return self.mine();
         }
       } else if (distanceToDestination <= 4) {
-        // Check if mining spot is occupied, in that case go to new random karbonite source
         if (self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
-          self.destination = closestFuelNotOccupied; // Set closest Fuel source as destination
+          if (self.macro === 'mine_karbonite') {
+            self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
+          } else if (self.macro === 'mine_fuel') {
+            self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
+          }
           self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-          self.log("Going to new fuel source.");
         }
       }
-    } else if (self.task == "build_church") {
-      self.log(distanceToDestination + " from future church location");
-      if (distanceToDestination <= 2) {
+    }
 
+    if (self.destination && self.task === 'build_church') {
+      self.log("I'm trying to build at: " + self.destination.x + ", " + self.destination.y + ". I'm at: " + location.x + ", " + location.y);
+      if (distanceToDestination <= 2) {
         let buildDirections = [{x:0, y:1}, {x:1, y:0}, {x:0, y:-1}, {x:-1, y:0}];
 
-        if (self.karbonite > 50 && self.fuel>200) {
+        if (self.karbonite > 50 && self.fuel > 200) {
           // Find direction to build to
-          for (var i=0; i<buildDirections.length; i++) {
-            if (unitHelper.isPassable({ x:buildDirections[i].x, y:buildDirections[i].y}, self.map, self.getVisibleRobotMap())) {
-              self.log("Building church! Direction: {"+buildDirections[i].x+", "+buildDirections[i].y+"}");
-              self.task = "return_home" // Return home after church is built
-              self.destination = self.castle;
+          for (var i = 0; i < buildDirections.length; i++) {
+            if (unitHelper.isPassable({x: buildDirections[i].x, y: buildDirections[i].y}, self.map, self.getVisibleRobotMap())) {
+              self.task = microTasks[self.macro][0];
+              if (self.macro === 'mine_karbonite') {
+                self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
+              } else if (self.macro === 'mine_fuel') {
+                self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
+              }
               self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
 
               return self.buildUnit(
@@ -186,30 +205,70 @@ var pilgrimHelper = {
               );
             }
           }
+        } else {
+          if (self.me.karbonite > 18 || self.me.fuel > 90) {
+            self.task = microTasks[self.macro][2];
+            self.destination = {x: self.castle.x, y: self.castle.y};
+            self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+          } else {
+            self.task = microTasks[self.macro][0];
+            if (self.macro === 'mine_karbonite') {
+              self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
+            } else if (self.macro === 'mine_fuel') {
+              self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
+            }
+            self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+          }
         }
+      } else if (unitHelper.sqDist(location, unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.type === SPECS.CHURCH))) <= 10) {
+        self.task = microTasks[self.macro][0];
+        if (self.macro === 'mine_karbonite') {
+          self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
+        } else if (self.macro === 'mine_fuel') {
+          self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
+        }
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+      }
+    }
 
-      } else if (distanceToDestination <= 4) {
-        if (self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
-          self.churchProspectMap[self.destination.y][self.destination.x] = -1;
-          self.destination = unitHelper.getOptimalChurchLocation(location, self.churchProspectMap); // Set random Karbonite source as destination
+    if (self.destination && self.task === 'find') {
+      self.log("my target is: " + self.destination.x + ", " + self.destination.y + ". I'm at: " + location.x + ", " + location.y);
+      if (distanceToDestination <= 4) {
+        let distanceToCastle = unitHelper.sqDist(location, self.castle);
+        let distanceToChurch = unitHelper.sqDist(location, unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.type === SPECS.CHURCH)));
+        if (isNaN(distanceToChurch)) distanceToChurch = Infinity;
+        self.log("I'm this far from my castle: " + distanceToCastle);
+        self.log("I'm this far from a church: " + distanceToChurch);
+        if (distanceToCastle >= 110 && distanceToChurch >= 40) {
+          self.log("I'm building");
+          self.task = microTasks[self.macro][1];
+          self.destination = unitHelper.getOptimalChurchLocation(location, self.churchProspectMap);
           self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-          self.log("Going to new church prospect location, last one was occupied.");
-          self.log(self.destination);
+        } else {
+          self.task = microTasks[self.macro][0];
+          self.log("I'm mining");
+          if (self.macro === 'mine_karbonite') {
+            self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
+          } else if (self.macro === 'mine_fuel') {
+            self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
+          }
+          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
         }
       }
     }
 
+    if (self.destination) {
+      let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+      if (self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]) {
+        // Reload map and direction if someone is blocking
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+        nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+        self.log("New path because my path was blocked :@");
+      }
 
-    let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
-    if (self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]) {
-      // Reload map and direction if someone is blocking
-      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-      nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
-      self.log("New path because my path was blocked :@");
+      self.log("Moving pilgrim to: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
+      return self.move(nextDirection.x, nextDirection.y);
     }
-
-    self.log("Moving pilgrim to: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
-    return self.move(nextDirection.x, nextDirection.y);
   }
 };
 

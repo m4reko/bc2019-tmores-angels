@@ -8,6 +8,9 @@ var crusaderHelper = {
         self.castle = self.getVisibleRobots()
         .filter(robot => robot.team === self.me.team && robot.unit === SPECS.CASTLE)[0];
     }
+    if (!self.castle) {
+      self.castle = {x: self.me.x, y: self.me.y};
+    }
 
     if(!self.task){
       if(self.me.id%3 == 0){
