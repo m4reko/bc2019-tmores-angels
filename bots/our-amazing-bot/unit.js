@@ -41,19 +41,10 @@ var unitHelper = {
 
   reflect: (loc, fullMap, isHorizontalReflection) => {
       const mapLen = fullMap.length-1;
-      const hReflect = {
-          x: loc.x,
-          y: mapLen - loc.y,
-      };
-      const vReflect = {
-          x: mapLen - loc.y,
-          y: loc.y,
-      };
-
-      if (isHorizontalReflection) {
-          return fullMap[hReflect.y][hReflect.x] ? hReflect : vReflect;
-      } else {
-          return fullMap[vReflect.y][vReflect.x] ? vReflect : hReflect;
+      if(isHorizontalReflection){
+        return {x: loc.x, y: mapLen-loc.y}
+      }else{
+        return {x: mapLen - loc.x, y: loc.y}
       }
   },
 

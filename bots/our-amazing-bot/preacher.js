@@ -84,33 +84,12 @@ var preacherHelper = {
     }
 
     // If at destination and no enemies nearby
-    let possibleDirections = unitHelper.getPossibleDirections(self.castle, self.map, self.getVisibleRobotMap());
-    let freeSpotNextToCastle = false;
-    if(possibleDirections.length>3){
-      // destination next to the castle if many spots available
-      freeSpotNextToCastle = {x: possibleDirections[0].x + self.castle.x, y: possibleDirections[0].y + self.castle.y};
-    }else if(possibleDirections.length>0){
-      // destination to steps away from the castle if only 1 or 2 spots is available
-      let spotNextToCastle = {x: possibleDirections[0].x + self.castle.x, y: possibleDirections[0].y + self.castle.y};
-      let directionsFromNextToCastle = unitHelper.getPossibleDirections(spotNextToCastle, self.map, self.getVisibleRobotMap());
-      if(directionsFromNextToCastle.length>0){
-        freeSpotNextToCastle = {x: directionsFromNextToCastle[0].x + self.castle.x, y: directionsFromNextToCastle[0].y + self.castle.y};
-      }else{
-        freeSpotNextToCastle = self.castle;
-      }
-    }else{
-      // destination is the castle itself if no spots are available around it
-      freeSpotNextToCastle = self.castle;
-    }
+    let newGuardPosition = unitHelper.getCastleGuardPosition(self.castle, self.map);
 
     if(distanceToDestination <= 2){
       if(self.task=="go_to_enemy"){
         self.task = "go_to_castle";
-        if(freeSpotNextToCastle){
-          self.destination = freeSpotNextToCastle;
-        }else{
-          self.destination = self.castle;
-        }
+        self.destination = newGuardPosition;
         self.log("going to castle instead");
         self.log(self.destination);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());

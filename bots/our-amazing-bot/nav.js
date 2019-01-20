@@ -10,7 +10,7 @@ nav.rotateArr = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 nav.rotateArrInd = {
     'N': 0,
     'NE': 1,
-    'E': 2,    
+    'E': 2,
     'SE': 3,
     'S': 4,
     'SW': 5,
@@ -135,5 +135,15 @@ nav.getClosestKarbonite = (loc, karbMap) => {
     return closestLoc;
 };
 
-export default nav;
+nav.isVertical = (map) => {
+  // check if the map is vertically mirrored
+  for (let y = 0; y < map.length; y++) {
+    for (let x = 0; x < map.length / 2; x++) {
+      if (map[y][x] !== map[y][map.length - (x + 1)]) return false;
+    }
+  }
+  return true;
+};
 
+
+export default nav;
