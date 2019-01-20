@@ -8,8 +8,8 @@ var structureHelper = {
     // I bild :D
   },
 
-  posTo6Bit: position => {
-    return {x: (position.x - (position.x % 8)) / 8, y: (position.y - (position.y % 8)) / 8};
+  posTo6Bit: (position, mapLen) => {
+    return {x: (position.x - (position.x % (Math.round(mapLen/8)))) / (Math.round(mapLen/8)), y: (position.y - (position.y % (Math.round(mapLen/8)))) / (Math.round(mapLen/8))};
   },
 
   isVertical: (map) => {
@@ -41,6 +41,7 @@ var structureHelper = {
     let possibleDirections = [];
     for(var x=-1;x<=1; x++){
       for(var y=-1;y<=1; y++){
+        if (x < 0 || x >= fullMap.length || y < 0 || y >= fullMap.length) continue;
         let dir = {x:x, y:y};
         let testLocation = {x: (loc.x + dir.x), y: (loc.y-dir.y)};
         if(structureHelper.isPassable(testLocation, fullMap, robotMap)){

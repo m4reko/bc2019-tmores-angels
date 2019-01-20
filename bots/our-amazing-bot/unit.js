@@ -4,7 +4,33 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 var unitHelper = {
   nav: nav,
 
-  posTo12Bit: position => {
+  posTo12Bit: (map, position) => {
+    let cellSize = (Math.round(map.length/8))
+    let x = position.x * cellSize;
+    let y = position.y * cellSize;
+    let mid = Math.floor(cellSize / 2);
+    if (y + mid >= 0 && y + mid < map.length && x + mid >= 0 && x + mid < map.length)
+      if (map[y + mid][x + mid]) return {x: position.x * 8 + mid, y: position.y * 8 + mid};
+    for (let i = 0; i < mid; i++) {
+      for (let j = 0; j < mid; j++) {
+        if (y + mid + i >= 0 && y + mid + i < map.length && x + mid + j >= 0 && x + mid + j < map.length)
+          if (map[y + mid + i][x + mid + j]) return {x: position.x * 8 + mid + j, y: position.y * 8 + mid + i};
+        if (y + mid + i >= 0 && y + mid + i < map.length && x + mid >= 0 && x + mid < map.length)
+          if (map[y + mid + i][x + mid]) return {x: position.x * 8 + mid, y: position.y * 8 + mid + i};
+        if (y + mid + i >= 0 && y + mid + i < map.length && x + mid - j >= 0 && x + mid - j < map.length)
+          if (map[y + mid + i][x + mid - j]) return {x: position.x * 8 + mid - j, y: position.y * 8 + mid + i};
+        if (y + mid >= 0 && y + mid < map.length && x + mid + j >= 0 && x + mid + j < map.length)
+          if (map[y + mid][x + mid + j]) return {x: position.x * 8 + mid + j, y: position.y * 8 + mid};
+        if (y + mid >= 0 && y + mid < map.length && x + mid - j >= 0 && x + mid - j < map.length)
+          if (map[y + mid][x + mid - j]) return {x: position.x * 8 + mid - j, y: position.y * 8 + mid};
+        if (y + mid - i >= 0 && y + mid - i < map.length && x + mid + j >= 0 && x + mid + j < map.length)
+          if (map[y + mid - i][x + mid + j]) return {x: position.x * 8 + mid + j, y: position.y * 8 + mid - i};
+        if (y + mid - i >= 0 && y + mid - i < map.length && x + mid >= 0 && x + mid < map.length)
+          if (map[y + mid - i][x + mid]) return {x: position.x * 8 + mid, y: position.y * 8 + mid - i};
+        if (y + mid - i >= 0 && y + mid - i < map.length && x + mid - j >= 0 && x + mid - j < map.length)
+          if (map[y + mid - i][x + mid - j]) return {x: position.x * 8 + mid - j, y: position.y * 8 + mid - i};
+      }
+    }
     return {x: 0, y: 0};
   },
 
@@ -26,7 +52,8 @@ var unitHelper = {
 
   // True if loc is passable, else False
   isPassable: (loc, fullMap, robotMap) => {
-    const {x, y} = loc;
+    const x = loc.x;
+    const y = loc.y;
     const mapLen = fullMap.length;
     if (x >= mapLen || x < 0) {
         return false;
@@ -50,7 +77,7 @@ var unitHelper = {
 
   getClosestAttackableOpponent : (me, robots) => {
     var closestRobot = false;
-    var shortestDist = 1000;
+    var shortestDist = Infinity;
     for(var i=0; i<robots.length; i++){
       let r = robots[i];
       const dist = unitHelper.sqDist(r, me);
@@ -70,12 +97,12 @@ var unitHelper = {
   getClosestUnoccupiedKarbonite : (loc, karbMap, robotMap) => {
     const mapLen = karbMap.length;
     let closestLoc = null;
-    let closestDist = 100000; // Large number;
+    let closestDist = Infinity; // Large number;
     for (let y = 0; y < mapLen; y++) {
         for (let x = 0; x < mapLen; x++) {
-            if (karbMap[y][x] && unitHelper.sqDist({x,y}, loc) < closestDist && robotMap[y][x] < 1) {
-                closestDist = unitHelper.sqDist({x,y}, loc);
-                closestLoc = {x,y};
+            if (karbMap[y][x] && unitHelper.sqDist({x: x, y: y}, loc) < closestDist && robotMap[y][x] < 1) {
+                closestDist = unitHelper.sqDist({x: x, y: y}, loc);
+                closestLoc = {x: x, y: y};
             }
         }
     }
@@ -121,33 +148,35 @@ var unitHelper = {
   // should be stored and used with getNextDirection method
   createDistanceMap: (dest, fullMap, robotMap) =>{
     let distMap = []; // Init distMap
-    for(var y=0; y<fullMap.length; y++){
+    for (let y = 0; y < fullMap.length; y++) {
       distMap[y] = [];
+      for (let x = 0; x < fullMap.length; x++) {
+        distMap[y].push(Infinity);
+      }
     }
     distMap[dest.y][dest.x] = 0;
     let done = false;
     let current_location = dest;
-    let current_locations = [] // Locations that can be reached with current amount of moves
-    current_locations.push(current_location) // add current location
-    let next_locations = [] // Destinations reachable from current_locations
+    let current_locations = []; // Locations that can be reached with current amount of moves
+    current_locations.push(current_location); // add current location
     let moves = 0;
 
-    while(!done){
-      for(var i = 0; i<current_locations.length; i++){
-        current_location = current_locations[i];
+    while (!done) {
+      let next_locations = []; // Destinations reachable from current_locations
+      for (const current_location of current_locations) {
         // Check all adjacent tiles:
-        for(var j = 0; j<unitHelper.directions.length; j++){
-          let direction  = unitHelper.directions[j];
-          let new_location = {};
-          new_location.x = current_location.x + direction.x;
-          new_location.y = current_location.y + direction.y;
+        for (const direction of unitHelper.directions) {
+          let new_location = {
+            x: current_location.x + direction.x,
+            y: current_location.y + direction.y
+          };
 
-          if(new_location.y >= 0 && new_location.y < fullMap.length &&
-            new_location.x >= 0 && new_location.x < fullMap.length &&
-            distMap[new_location.y][new_location.x] == undefined){
-            if(!unitHelper.isPassable(new_location, fullMap, robotMap)){
+          if (new_location.y >= 0 && new_location.y < fullMap.length &&
+              new_location.x >= 0 && new_location.x < fullMap.length &&
+              distMap[new_location.y][new_location.x] === Infinity) {
+            if (!unitHelper.isPassable(new_location, fullMap, robotMap)) {
               distMap[new_location.y][new_location.x] = -2;
-            }else{
+            } else {
               distMap[new_location.y][new_location.x] = moves + 1;
               next_locations.push(new_location)
             }
@@ -156,9 +185,8 @@ var unitHelper = {
       }
       moves++;
       current_locations = next_locations;
-      next_locations = [];
 
-      if (current_locations.length == 0){
+      if (!current_locations.length) {
         done = true;
       }
     }
@@ -205,6 +233,20 @@ var unitHelper = {
     return churchProspectMap;
   },
 
+  getClosestChurch: (location, visible) => {
+    if (visible.length <= 0) return false;
+    let closestDist = Infinity;
+    let closest = visible[0];
+    for (const church of visible) {
+      let dist = unitHelper.sqDist(location, {x: church.x, y: church.y});
+      if (dist < closestDist) {
+        closestDist = dist;
+        closest = church;
+      }
+    }
+    return closest;
+  },
+
   // Get all positions for resources within a square radius
   getNearbyResourceLocations: (loc, karboniteMap, fuelMap, radius) => {
     let resourceLocations = [];
@@ -222,12 +264,12 @@ var unitHelper = {
 
   getCastleGuardPosition: (castle, fullMap)=>{
     let guardPositions = [];
-    for(var y=castle.y-4; y<castle.y+4; y++){
-      for(var x=castle.x-4; x<castle.x+4; x++){
-        if(fullMap[y] && fullMap[y][x] &&
-          (x>castle.x+1 || x<castle.x-1) &&
-          (y>castle.y+1 || y<castle.y-1)){
-            guardPositions.push({x:x, y:y});
+    for (var y = castle.y - 4; y < castle.y + 4; y++) {
+      for (var x = castle.x - 4; x < castle.x + 4; x++) {
+        if (fullMap[y] && fullMap[y][x] &&
+          (x > castle.x + 1 || x < castle.x - 1) &&
+          (y > castle.y + 1 || y < castle.y - 1)) {
+            guardPositions.push({x: x, y: y});
         }
       }
     }
