@@ -261,7 +261,22 @@ var unitHelper = {
       }
     }
     return {y: currentLocation.y-loc.y, x: currentLocation.x-loc.x};
+  },
+
+  getPossibleDirections : (loc, fullMap, robotMap) => {
+    let possibleDirections = [];
+    for(var x=-1;x<=1; x++){
+      for(var y=-1;y<=1; y++){
+        let dir = {x:x, y:y};
+        let testLocation = {x: (loc.x + dir.x), y: (loc.y-dir.y)};
+        if(unitHelper.isPassable(testLocation, fullMap, robotMap)){
+          possibleDirections.push(dir);
+        }
+      }
+    }
+    return possibleDirections;
   }
+
 };
 
 export default unitHelper;
