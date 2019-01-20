@@ -23,7 +23,7 @@ class MyRobot extends BCAbstractRobot {
         ];
         this.castleAmount = 0;
         this.castleNumber = null;
-        this.objectiveMap = [];
+        this.heatMap = [];
         this.mapFragments = 8;
         this.helper = null;
         this.step = 0;

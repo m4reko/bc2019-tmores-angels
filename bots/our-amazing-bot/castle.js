@@ -7,7 +7,7 @@ var castleHelper = {
     const team = self.me.team;
     let selfOffer = self.last_offer[team];
 
-    let castleTalkValue = self.me.castle_talk;
+    let castleTalking = self.getVisibleRobots().filter(r => r.team === team && r.castle_talk > 0);
 
     let tradeSign = 1;
     if (team === 0) {
@@ -97,32 +97,125 @@ var castleHelper = {
           self.oppCastleLocations[2][1] = self.map.length - (self.castleLocations[2][1] + 1);
         }
       }
+      // divide resource sources based on distance from each castle
+      /*if (!self.resourceNumber || !self.resourceMap) {
+        self.resourceNumber = 0;
+        self.resourceMap = [];
+        for (let y = 0; y < self.map.length; y += 8) {
+          let currentRow = [];
+          for (let x = 0; x < self.map.length; x += 8) {
+            let currentCell = false;
+            for (let i = 0; i < 8; i++) {
+              for (let j = 0; j < 8; j++) {
+                if (y + i >= self.map.length || x + j >= self.map.length) continue;
+                currentCell = self.karbonite_map[y + i][x + j] || self.fuel_map[y + i][x + j];
+              }
+            }
+            currentRow.push(currentCell);
+          }
+          self.resourceMap.push(currentRow);
+        }
+      }*/
+      if (!self.resourcesManagedKarbonite || !self.resourcesManagedFuel || !self.managedKarbonite || !self.managedFuel) {
+        self.resourcesManagedKarbonite = [];
+        self.resourcesManagedFuel = [];
+        self.managedKarbonite = 0;
+        self.managedFuel = 0;
+        for (let y = 0; y < self.karbonite_map.length; y++) {
+          for (let x = 0; x < self.karbonite_map.length; x++) {
+            if (self.karbonite_map[y][x]) {
+              let dangerous = false;
+              for (const enemycastle of self.oppCastleLocations) {
+                if (enemycastle[0] === -1) continue;
+                if (structureHelper.nav.sqDist({x: x, y: y}, {x: enemycastle[0], y: enemycastle[1]}) <= 100) dangerous = true;
+              }
+              if (dangerous) continue;
+              if (self.castleAmount === 1) {
+                self.managedKarbonite++;
+                self.resourcesManagedKarbonite.push({x: x, y: y});
+                continue;
+              }
+              let dist = [];
+              dist.push(structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[0][0], y: self.castleLocations[0][1]}));
+              dist.push(structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[1][0], y: self.castleLocations[0][1]}));
+              dist.push(Infinity);
+              if (self.castleAmount === 3) dist[2] = structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[2][0], y: self.castleLocations[0][1]});
+              let min = Math.min(dist[0], dist[1], dist[2]);
+              for (let i = 0; i < 3; i++) {
+                if (dist[i] === min && self.castleNumber === i + 1) {
+                  self.managedKarbonite++;
+                  self.resourcesManagedKarbonite.push({x: x, y: y});
+                  break;
+                }
+              }
+            }
+            if (self.fuel_map[y][x]) {
+              let dangerous = false;
+              for (const enemycastle of self.oppCastleLocations) {
+                if (enemycastle[0] === -1) continue;
+                if (structureHelper.nav.sqDist({x: x, y: y}, {x: enemycastle[0], y: enemycastle[1]}) <= 100) dangerous = true;
+              }
+              if (dangerous) continue;
+              if (self.castleAmount === 1) {
+                self.managedFuel++;
+                self.resourcesManagedFuel.push({x: x, y: y});
+                continue;
+              }
+              let dist = [];
+              dist.push(structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[0][0], y: self.castleLocations[0][1]}));
+              dist.push(structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[1][0], y: self.castleLocations[0][1]}));
+              dist.push(Infinity);
+              if (self.castleAmount === 3) dist[2] = structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[2][0], y: self.castleLocations[0][1]});
+              let min = Math.min(dist[0], dist[1], dist[2]);
+              for (let i = 0; i < 3; i++) {
+                if (dist[i] === min && self.castleNumber === i + 1) {
+                  self.managedFuel++;
+                  self.resourcesManagedFuel.push({x: x, y: y});
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
-    if (castleTalkValue >= 64) {
-      // a unit should send this to locate enemies
-      let position = castleTalkValue - 64;
-      let xPos = position % 8;
-      let yPos = (position - xPos) / 8;
+    if (castleTalking.length) {
+      for (const ally of castleTalking) {
+        // a unit should send this to locate enemies
 
-      self.objectiveMap.push({code: 1, frag: true, x: xPos, y: yPos});
-
-      if (self.castleNumber === self.castleAmount) {
-        // last castle will reset the signal
-        self.castleTalk(0);
+        self.heatMap.push({code: ally.castle_talk /*, x: ally.x, y: ally.y*/ });
       }
     }
 
     // Build pilgrims
-    if(!self.spawnedPilgrims && !self.spawnedCrusaders){
-      self.spawnedPilgrims = 0;
+    if(!self.spawnedKarbonite && !self.spawnedFuel && !self.spawnedCrusaders){
+      self.spawnedKarbonite = 0;
+      self.spawnedFuel = 0;
       self.spawnedCrusaders = 0;
     }
-    if (self.karbonite >= 20 && self.spawnedPilgrims < 6) {
-      self.spawnedPilgrims++;
+    if (!self.managedKarbonite || !self.managedFuel) {
+      self.managedKarbonite = 0;
+      self.managedFuel = 0;
+    }
+    if (self.karbonite >= 20 && (self.spawnedKarbonite < self.managedKarbonite || self.spawnedFuel < self.managedFuel)) {
+      let spawnKarbonite = ((self.karbonite < 60 && self.spawnedKarbonite < self.managedKarbonite) || self.spawnedFuel >= self.managedFuel);
+      if (spawnKarbonite) self.spawnedKarbonite++;
+      else self.spawnedFuel++;
       let location = {x: self.me.x, y: self.me.y};
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
       let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+
+      let targetResource = {x: -1, y: -1};
+      if (spawnKarbonite && self.resourcesManagedKarbonite.length > 0) {
+        targetResource = self.resourcesManagedKarbonite.pop();
+      } else if (!spawnKarbonite && self.resourcesManagedFuel.length > 0) {
+        targetResource = self.resourcesManagedFuel.pop();
+      } else {
+        targetResource = {x: "", y: ""};
+      }
+      let pos = structureHelper.posTo6Bit(targetResource);
+      self.signal(parseInt(pos.x.toString() + pos.y.toString() + "0", 10), 1);
 
       self.log('Building a pilgrim at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
       return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
@@ -157,24 +250,6 @@ var castleHelper = {
       }
     }
 
-    if (!self.resourceNumber || !self.resourceMap) {
-      self.resourceNumber = 0;
-      self.resourceMap = [];
-      for (let y = 0; y < self.map.length; y += 8) {
-        let currentRow = [];
-        for (let x = 0; x < self.map.length; x += 8) {
-          let currentCell = false;
-          for (let i = 0; i < 8; i++) {
-            for (let j = 0; j < 8; j++) {
-              if (y + i >= self.map.length || x + j >= self.map.length) continue;
-              currentCell = self.karbonite_map[y + i][x + j] || self.fuel_map[y + i][x + j];
-            }
-          }
-          currentRow.push(currentCell);
-        }
-        self.resourceMap.push(currentRow);
-      }
-    }
     if (self.karbonite >= 50 && self.spawnedCrusaders < 4) {
       self.spawnedCrusaders++;
       let location = {x: self.me.x, y: self.me.y};

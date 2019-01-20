@@ -8,6 +8,10 @@ var structureHelper = {
     // I bild :D
   },
 
+  posTo6Bit: position => {
+    return {x: (position.x - (position.x % 8)) / 8, y: (position.y - (position.y % 8)) / 8};
+  },
+
   isVertical: (map) => {
     // check if the map is vertically mirrored
     for (let y = 0; y < map.length; y++) {

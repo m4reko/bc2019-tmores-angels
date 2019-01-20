@@ -4,6 +4,10 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 var unitHelper = {
   nav: nav,
 
+  posTo12Bit: position => {
+    return {x: 0, y: 0};
+  },
+
   directions: [
     {x:-1, y:0},
     {x:1, y:0},
