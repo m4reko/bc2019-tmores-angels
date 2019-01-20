@@ -265,6 +265,15 @@ var castleHelper = {
       }
     }
 
+    if (self.karbonite >= 100 && self.spawnedKarbonite > 0 && self.spawnedFuel > 0) {
+      let location = {x: self.me.x, y: self.me.y};
+      let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
+      let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+
+      self.log('Building a prophet at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
+      return self.buildUnit(SPECS.PROPHET, randomDirection.x, randomDirection.y);
+    }
+
     if (self.karbonite >= 50 && self.spawnedCrusaders < 4 && self.spawnedKarbonite > 0 && self.spawnedFuel > 0) {
       self.spawnedCrusaders++;
       let location = {x: self.me.x, y: self.me.y};
