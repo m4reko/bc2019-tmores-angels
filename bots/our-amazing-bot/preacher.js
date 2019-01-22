@@ -101,9 +101,9 @@ var preacherHelper = {
         return self.move(nextDirection.x, nextDirection.y);
 
       }else if(self.task=="go_to_castle"){
+        self.log("Standing still");
         if(self.target){
           // stand still
-          return null;
           // self.task="go_to_enemy";
           // self.destination = self.target;
           //
@@ -117,11 +117,13 @@ var preacherHelper = {
         }
       }
     }else{
+      self.log("Just moving..");
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
       self.log("Just moving preacher: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
       return self.move(nextDirection.x, nextDirection.y);
     }
+    self.log("No action..");
     // no action
     return null;
   }
