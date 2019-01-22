@@ -233,17 +233,17 @@ var castleHelper = {
       } else if (!spawnKarbonite && self.resourcesManagedFuel.length > 0) {
         self.log(self.resourcesManagedFuel);
         targetResource = self.resourcesManagedFuel.pop();
-      } else if(randomDirection){
+      } else {
         targetResource = {x: randomDirection.x, y: randomDirection.y};
       }
       let pos = structureHelper.posTo6Bit(targetResource, self.map.length);
-      if(pos){
+      if (pos) {
         self.signal(parseInt((spawnKarbonite ? "1" : "2") + pos.x.toString() + pos.y.toString(), 10), 1);
       }
-      if(randomDirection){
+      if (randomDirection) {
         self.log('Building a pilgrim at ' + (self.me.x + randomDirection.x) + ',' + (self.me.y + randomDirection.y));
         return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
-      }else{
+      } else {
         self.log("No random direction was found - cannot build");
       }
     }
