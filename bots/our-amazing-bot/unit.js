@@ -265,11 +265,10 @@ var unitHelper = {
   getCastleGuardPosition: (castle, fullMap)=>{
     let guardPositions = [];
     for (var y = castle.y - 4; y < castle.y + 4; y++) {
-      for (var x = castle.x - 4; x < castle.x + 4; x=x + y%2) {
+      for (var x = castle.x - 4; x < castle.x + 4; x++) {
         if (fullMap[y] && fullMap[y][x] &&
-          (x > castle.x + 1 || x < castle.x - 1) &&
-          (y > castle.y + 1 || y < castle.y - 1)) {
-            guardPositions.push({x: x, y: y});
+            (y%2) == (x%2)){
+            guardPositions.push({x: x, y: y}); // Chess board pattern
         }
       }
     }

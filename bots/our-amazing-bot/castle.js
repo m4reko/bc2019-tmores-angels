@@ -9,10 +9,7 @@ var castleHelper = {
     }
 
     if(self.managedKarbonite){
-      self.log(self.managedKarbonite + " managed karbonite");
-      self.log(self.managedFuel + " managed fuel");
-      self.log(self.spawnedKarbonite + " spawned karbonite");
-      self.log(self.spawnedFuel + " spawned fuel");
+      self.log("ROUND " + self.step);
     }
     // we do stuff
     const team = self.me.team;
