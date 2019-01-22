@@ -151,7 +151,7 @@ var unitHelper = {
     for (let y = 0; y < fullMap.length; y++) {
       distMap[y] = [];
       for (let x = 0; x < fullMap.length; x++) {
-        distMap[y].push(Infinity);
+        distMap[y].push(1000);
       }
     }
     distMap[dest.y][dest.x] = 0;
@@ -173,7 +173,7 @@ var unitHelper = {
 
           if (new_location.y >= 0 && new_location.y < fullMap.length &&
               new_location.x >= 0 && new_location.x < fullMap.length &&
-              distMap[new_location.y][new_location.x] === Infinity) {
+              distMap[new_location.y][new_location.x] >= 1000) {
             if (!unitHelper.isPassable(new_location, fullMap, robotMap)) {
               distMap[new_location.y][new_location.x] = -2;
             } else {
@@ -279,21 +279,22 @@ var unitHelper = {
   //Get next direction according to a distance map
   getNextDirection: (loc, range, distMap) => {
     let currentValue = 1000;
-    let currentLocation = {x:0, y:0};
+    let currentLocation = loc;
 
     // Test all positions in range and find the one closest to 0
-    for(var y = loc.y-range; y<=loc.y+range; y++){
-      for(var x = loc.x-range; x<=loc.x+range; x++){
-        if( y<distMap.length && x<distMap.length && x>=0 && y>=0 &&
-          distMap[y][x] < currentValue && distMap[y][x] > -1 &&
-          !(loc.x == x && loc.y == y)){
+    for (var y = loc.y - range; y <= loc.y + range; y++){
+      for (var x = loc.x - range; x<=loc.x + range; x++){
+        if (y < distMap.length && x < distMap.length && x >= 0 && y >= 0) {
+          if (unitHelper.sqDist(loc, {x: x, y: y}) > range) continue;
+          if (distMap[y][x] < currentValue && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {
             currentLocation.x =  x;
             currentLocation.y =  y;
             currentValue = distMap[y][x];
+          }
         }
       }
     }
-    return {y: currentLocation.y-loc.y, x: currentLocation.x-loc.x};
+    return {y: currentLocation.y - loc.y, x: currentLocation.x - loc.x};
   },
 
   getPossibleDirections : (loc, fullMap, robotMap) => {

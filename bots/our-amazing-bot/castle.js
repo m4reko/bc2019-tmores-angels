@@ -220,27 +220,28 @@ var castleHelper = {
     if (self.karbonite >= 10 + ((self.step > 50 ? 1 : 5) * self.step) && self.fuel >= 100 && (self.spawnedKarbonite < self.managedKarbonite || self.spawnedFuel < self.managedFuel)) {
       self.log("spawning pilgrim");
       let spawnKarbonite = (self.spawnedKarbonite <= self.spawnedFuel);//) || ((self.karbonite < 40 + 10 * self.step && self.spawnedKarbonite < self.managedKarbonite) || self.spawnedFuel >= self.managedFuel);
-      if (spawnKarbonite) self.spawnedKarbonite++;
-      else self.spawnedFuel++;
       let location = {x: self.me.x, y: self.me.y};
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
       let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
 
-      let targetResource = {x: -1, y: -1};
+      let targetResource = {x: 0, y: 0};
       if (spawnKarbonite && self.resourcesManagedKarbonite.length > 0) {
         self.log(self.resourcesManagedKarbonite);
         targetResource = self.resourcesManagedKarbonite.pop();
       } else if (!spawnKarbonite && self.resourcesManagedFuel.length > 0) {
         self.log(self.resourcesManagedFuel);
         targetResource = self.resourcesManagedFuel.pop();
-      } else {
+      } else if (randomDirection) {
         targetResource = {x: randomDirection.x, y: randomDirection.y};
       }
-      let pos = structureHelper.posTo6Bit(targetResource, self.map.length);
+      //let pos = structureHelper.posTo6Bit(targetResource, self.map.length);
+      let pos = targetResource.y * self.map.length + targetResource.x;
       if (pos) {
-        self.signal(parseInt((spawnKarbonite ? "1" : "2") + pos.x.toString() + pos.y.toString(), 10), 1);
+        self.signal(parseInt((spawnKarbonite ? "1" : "2") + pos.toString(), 10), 1);
       }
       if (randomDirection) {
+        if (spawnKarbonite) self.spawnedKarbonite++;
+        else self.spawnedFuel++;
         self.log('Building a pilgrim at ' + (self.me.x + randomDirection.x) + ',' + (self.me.y + randomDirection.y));
         return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
       } else {

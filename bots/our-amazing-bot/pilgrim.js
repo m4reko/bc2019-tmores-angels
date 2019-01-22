@@ -3,6 +3,7 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var pilgrimHelper = {
   turn: self => {
+    self.log("Pilgrim");
     // On the first turn, find out our base
     if (!self.castle) {
         self.castle = self.getVisibleRobots()
@@ -40,6 +41,7 @@ var pilgrimHelper = {
 
     let initTarget = null;
     if (self.step === 1) {
+      self.waitTurn = 0;
       if (self.isRadioing(self.castle)) {
         if (self.castle.signal_radius === 1) {
           let signal = self.castle.signal;
@@ -50,13 +52,18 @@ var pilgrimHelper = {
             self.macro = macroTasks[signal.pop() - 1];
           }
           if (signal.length && signal.length > 1) {
-            initTarget = {x: signal.pop(), y: signal.pop()};
+            signal = parseInt(signal.reverse().join(""), 10);
+            initTarget = {x: signal % self.map.length, y: (signal - signal % self.map.length) / self.map.length};
             self.log("I'm going to " + initTarget.x + ", " + initTarget.y);
-            self.task = microTasks[self.macro][3];
+            self.task = microTasks[self.macro][3]; // find
             self.log("my task is " + self.task);
           }
         }
       }
+    }
+
+    if (!self.targetarea) {
+      self.targetarea = {x: self.castle.x, y: self.castle.y};
     }
 
     if (!self.macro) {
@@ -96,7 +103,9 @@ var pilgrimHelper = {
 
     // Set new destination if none exist
     if (initTarget !== null && self.task === 'find') {
-      self.destination = unitHelper.posTo12Bit(self.map, initTarget);
+      //self.targetarea = unitHelper.posTo12Bit(self.map, initTarget);
+      self.targetarea = initTarget;
+      self.destination = self.targetarea;
     }
     if ((!self.destination || !self.distanceMap) && (self.macro === 'mine_karbonite' || self.macro === 'mine_fuel')) {
       if (self.task == 'build_church') {
@@ -127,12 +136,8 @@ var pilgrimHelper = {
       self.log("I'm trying to stash at: " + self.destination.x + ", " + self.destination.y + ". I'm at: " + location.x + ", " + location.y);
       if (distanceToDestination <= 2) {
         let oldDest = self.destination;
-        self.task = microTasks[self.macro][0];
-        if (self.macro === 'mine_karbonite') {
-          self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
-        } else if (self.macro === 'mine_fuel') {
-          self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
-        }
+        self.task = microTasks[self.macro][3]; // find
+        self.destination = self.targetarea;
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
         return self.give(
           oldDest.x - location.x,
@@ -146,36 +151,41 @@ var pilgrimHelper = {
     // mine stuff
     if (self.destination && self.task === 'mine') {
       self.log("I'm trying to mine at: " + self.destination.x + ", " + self.destination.y + ". I'm at: " + location.x + ", " + location.y);
-      if (distanceToDestination <= 0 || (location.x === self.destination.x && location.y === self.destination.y)) {
+      if (location.x === self.destination.x && location.y === self.destination.y) {
+        if (self.waitTurn) self.waitTurn = 0;
+        // If at destination
         if (self.me.karbonite > 18 || self.me.fuel > 90) {
-          self.task = microTasks[self.macro][2];
+          self.task = microTasks[self.macro][2]; // stash
+          let distanceToCastle = unitHelper.sqDist(location, self.castle);
           let target = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.type === SPECS.CHURCH));
           if (!target) {
-            if (self.karbonite > 50 && self.fuel > 200) {
-              let distanceToCastle = unitHelper.sqDist(location, self.castle);
-              let distanceToChurch = unitHelper.sqDist(location, unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.type === SPECS.CHURCH)));
-              if (distanceToCastle >= 50 && distanceToChurch >= 16) {
-                self.task = microTasks[self.macro][1];
+            if (self.karbonite >= 50 && self.fuel >= 200) {
+              if (distanceToCastle > 25) {
+                self.task = microTasks[self.macro][1]; // build church
                 target = unitHelper.getOptimalChurchLocation(location, self.churchProspectMap);
               }
-            } else {
-              target = {x: self.castle.x, y: self.castle.y};
             }
           }
-          if (!target) target = {x: self.castle.x, y: self.castle.y};
+          if (!target) target = self.castle;
+          let distanceToChurch = unitHelper.sqDist(location, target);
+          if (distanceToCastle <= distanceToChurch) {
+            self.task = microTasks[self.macro][2]; // stash
+            target = self.castle;
+          }
           self.destination = target;
-          self.log("I'm trying to get a distance map with: " + self.destination.x + ", " + self.destination.y);
           self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
         } else {
           return self.mine();
         }
-      } else if (distanceToDestination <= 4) {
+      } else if (distanceToDestination <= 2) {
+        if (self.waitTurn < 2) {
+          self.waitTurn++;
+          return null;
+        }
         if (self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
-          if (self.macro === 'mine_karbonite') {
-            self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
-          } else if (self.macro === 'mine_fuel') {
-            self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
-          }
+          if (self.waitTurn) self.waitTurn = 0;
+          // If destination occupied, get new closest source
+          self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
           self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
         }
       }
@@ -184,91 +194,93 @@ var pilgrimHelper = {
     if (self.destination && self.task === 'build_church') {
       self.log("I'm trying to build at: " + self.destination.x + ", " + self.destination.y + ". I'm at: " + location.x + ", " + location.y);
       if (distanceToDestination <= 2) {
-        let buildDirections = [{x:0, y:1}, {x:1, y:0}, {x:0, y:-1}, {x:-1, y:0}];
+        let passable = unitHelper.isPassable({x: self.destination.x, y: self.destination.y}, self.map, self.getVisibleRobotMap());
+        // TODO: check if detination is alraedy a church
 
-        if (self.karbonite > 50 && self.fuel > 200) {
-          // Find direction to build to
-          for (var i = 0; i < buildDirections.length; i++) {
-            if (unitHelper.isPassable({x: buildDirections[i].x, y: buildDirections[i].y}, self.map, self.getVisibleRobotMap())) {
-              self.task = microTasks[self.macro][0];
-              if (self.macro === 'mine_karbonite') {
-                self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
-              } else if (self.macro === 'mine_fuel') {
-                self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
-              }
-              self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-
-              return self.buildUnit(
-                SPECS.CHURCH,
-                buildDirections[i].x,
-                buildDirections[i].y
-              );
-            }
-          }
-        } else {
+        if (self.karbonite >= 50 && self.fuel >= 200 && passable) {
+          if (self.waitTurn) self.waitTurn = 0;
           if (self.me.karbonite > 18 || self.me.fuel > 90) {
-            self.task = microTasks[self.macro][2];
+            self.task = microTasks[self.macro][2]; // stash
+          } else {
+            self.task = microTasks[self.macro][0]; // mine
+            self.destination = self.targetarea;
+            self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+          }
+
+          return self.buildUnit(
+            SPECS.CHURCH,
+            self.destination.x - location.x,
+            self.destination.y - location.y
+          );
+        } else if (self.waitTurn < 2) {
+          self.waitTurn++;
+          return null;
+        } else {
+          if (self.waitTurn) self.waitTurn = 0;
+          if (self.me.karbonite > 18 || self.me.fuel > 90) {
+            // stash at castle instead
+            self.task = microTasks[self.macro][2]; // stash
             self.destination = {x: self.castle.x, y: self.castle.y};
             self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
           } else {
+            // we can mine some more instead
             self.task = microTasks[self.macro][0];
-            if (self.macro === 'mine_karbonite') {
-              self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
-            } else if (self.macro === 'mine_fuel') {
-              self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
-            }
+            self.destination = self.targetarea;
             self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
           }
         }
-      } else if (unitHelper.sqDist(location, unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.type === SPECS.CHURCH))) <= 10) {
-        self.task = microTasks[self.macro][0];
-        if (self.macro === 'mine_karbonite') {
-          self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
-        } else if (self.macro === 'mine_fuel') {
-          self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
+      } else {
+        let closestChurch = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.type === SPECS.CHURCH));
+        if (unitHelper.sqDist(location, closestChurch) <= 25) {
+          // there's another church nearby
+          if (self.me.karbonite > 18 || self.me.fuel > 90) {
+            // stash at the nearby castle
+            self.task = microTasks[self.macro][2]; // stash
+            self.destination = closestChurch;
+          } else {
+            // go mine instead
+            self.task = microTasks[self.macro][0]; // mine
+            self.destination = self.targetarea;
+          }
+          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
         }
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
     }
 
     if (self.destination && self.task === 'find') {
       self.log("my target is: " + self.destination.x + ", " + self.destination.y + ". I'm at: " + location.x + ", " + location.y);
-      if (distanceToDestination <= 4) {
+      if (distanceToDestination <= 2) {
+        self.task = microTasks[self.macro][0];
         let distanceToCastle = unitHelper.sqDist(location, self.castle);
         let distanceToChurch = unitHelper.sqDist(location, unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.type === SPECS.CHURCH)));
         if (isNaN(distanceToChurch)) distanceToChurch = Infinity;
-        self.log("I'm this far from my castle: " + distanceToCastle);
-        self.log("I'm this far from a church: " + distanceToChurch);
-        if (distanceToCastle >= 110 && distanceToChurch >= 40) {
-          self.log("I'm building");
-          self.task = microTasks[self.macro][1];
+        if (distanceToCastle >= 25 && distanceToChurch >= 25) {
+          self.task = microTasks[self.macro][1]; // build church
           self.destination = unitHelper.getOptimalChurchLocation(location, self.churchProspectMap);
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
         } else {
-          self.task = microTasks[self.macro][0];
-          self.log("I'm mining");
-          if (self.macro === 'mine_karbonite') {
-            self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
-          } else if (self.macro === 'mine_fuel') {
-            self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
-          }
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+          self.task = microTasks[self.macro][0]; // mine
+          self.destination = self.targetarea;
         }
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
     }
 
     if (self.destination) {
+      self.log("My task is: " + self.task);
       let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
-      if (self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]) {
+
+      if (!unitHelper.isPassable({x: location.x + nextDirection.x, y: location.y + nextDirection.y}, self.map, self.getVisibleRobotMap())) {
         // Reload map and direction if someone is blocking
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
         nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
         self.log("New path because my path was blocked :@");
       }
 
-      self.log("Moving pilgrim to: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
+      self.log("Moving pilgrim to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
       return self.move(nextDirection.x, nextDirection.y);
     }
+
+    return null;
   }
 };
 
