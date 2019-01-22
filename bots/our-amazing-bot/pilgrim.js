@@ -267,6 +267,28 @@ var pilgrimHelper = {
 
     if (self.destination) {
       self.log("My task is: " + self.task);
+      self.log("My destination is: " + self.destination.x + ", " + self.destination.y);
+      // for (let y = 0; y < self.map.length; y++) {
+      //   let row = "";
+      //   for (let x = 0; x < self.map[y].length; x++) {
+      //     row += "| " + (self.map[y][x] ? "O" : "X") + " ";
+      //   }
+      //   self.log(row);
+      // }
+      // for (const y of self.getVisibleRobotMap()) {
+      //   let row = "";
+      //   for (const x of y) {
+      //     row += "| " + (x < 1000 ? " " : "") + (x < 100 ? " " : "") + (x < 10 && x >= 0 ? " " : "") + x + " ";
+      //   }
+      //   self.log(row);
+      // }
+      // for (const y of self.distanceMap) {
+      //   let row = "";
+      //   for (const x of y) {
+      //     row += "| " + (x < 1000 ? " " : "") + (x < 100 ? " " : "") + (x < 10 && x >= 0 ? " " : "") + x + " ";
+      //   }
+      //   self.log(row);
+      // }
       let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
 
       if (!unitHelper.isPassable({x: location.x + nextDirection.x, y: location.y + nextDirection.y}, self.map, self.getVisibleRobotMap())) {
@@ -277,6 +299,8 @@ var pilgrimHelper = {
       }
 
       self.log("Moving pilgrim to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
+      // self.log("Passable: " + self.map[location.y + nextDirection.y][location.x + nextDirection.x]);
+      // self.log("Robots: " + self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]);
       return self.move(nextDirection.x, nextDirection.y);
     }
 

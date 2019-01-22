@@ -45,6 +45,13 @@ var unitHelper = {
     {x:-1, y:-1}
   ],
 
+  directions_: [
+    {x:-1, y:0},
+    {x:1, y:0},
+    {x:0, y:-1},
+    {x:0, y:1},
+  ],
+
   // Gives squared distance
   sqDist : (start, end) => {
     return Math.pow(start.x - end.x, 2) + Math.pow(start.y - end.y, 2);
@@ -165,7 +172,7 @@ var unitHelper = {
       let next_locations = []; // Destinations reachable from current_locations
       for (const current_location of current_locations) {
         // Check all adjacent tiles:
-        for (const direction of unitHelper.directions) {
+        for (const direction of unitHelper.directions_) {
           let new_location = {
             x: current_location.x + direction.x,
             y: current_location.y + direction.y
@@ -278,16 +285,16 @@ var unitHelper = {
   //Get next direction according to a distance map
   getNextDirection: (loc, range, distMap) => {
     let currentValue = 1000;
-    let currentLocation = loc;
+    let currentLocation = {x: 0, y: 0};
 
     // Test all positions in range and find the one closest to 0
     for (var y = loc.y - range; y <= loc.y + range; y++){
-      for (var x = loc.x - range; x<=loc.x + range; x++){
+      for (var x = loc.x - range; x <= loc.x + range; x++){
         if (y < distMap.length && x < distMap.length && x >= 0 && y >= 0) {
           if (unitHelper.sqDist(loc, {x: x, y: y}) > range) continue;
           if (distMap[y][x] < currentValue && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {
-            currentLocation.x =  x;
-            currentLocation.y =  y;
+            currentLocation.x = x;
+            currentLocation.y = y;
             currentValue = distMap[y][x];
           }
         }
