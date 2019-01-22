@@ -19,6 +19,7 @@ var preacherHelper = {
     }
 
     if (self.isRadioing(self.castle)) {
+      // get position from castle to go to
       if (self.castle.signal_radius === 1) {
         let signal = self.castle.signal;
         signal = signal.toString();
@@ -52,14 +53,15 @@ var preacherHelper = {
 
     if(!self.destination){
       // Start by going towards an enemy
-      self.task = "go_to_enemy";
       if(self.target){
         self.destination = self.target;
       }else{
-        self.destination = location;
+        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
       }
 
-      self.log("Going to enemy position given by castle:");
+      self.task = "go_to_enemy";
+      self.log("Going towards enemy position given by castle:");
+      self.log(location);
       self.log(self.destination);
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
@@ -88,6 +90,7 @@ var preacherHelper = {
 
     if(distanceToDestination <= 2){
       if(self.task=="go_to_enemy"){
+
         self.task = "go_to_castle";
         self.destination = newGuardPosition;
         self.log("going to castle instead");
@@ -99,6 +102,8 @@ var preacherHelper = {
 
       }else if(self.task=="go_to_castle"){
         if(self.target){
+          // stand still
+          return null;
           // self.task="go_to_enemy";
           // self.destination = self.target;
           //
@@ -114,21 +119,11 @@ var preacherHelper = {
     }else{
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
-      self.log("Moving preacher: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
+      self.log("Just moving preacher: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
       return self.move(nextDirection.x, nextDirection.y);
     }
-
-    // Walk towards destination
-    // let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
-    // if(self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]){
-    //   // Reload map and direction if someone is blocking
-    //   self.log("New path because my path was blocked :@");
-    //   self.log(self.destination);
-    //   self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-    //   nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
-    // }
-    // self.log("Moving preacher to: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
-    // return self.move(nextDirection.x, nextDirection.y);
+    // no action
+    return null;
   }
 };
 

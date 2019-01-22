@@ -7,6 +7,13 @@ var castleHelper = {
       // Just setting castle amount to 1 before we counted them
       self.castleAmount = 1;
     }
+
+    if(self.managedKarbonite){
+      self.log(self.managedKarbonite + " managed karbonite");
+      self.log(self.managedFuel + " managed fuel");
+      self.log(self.spawnedKarbonite + " spawned karbonite");
+      self.log(self.spawnedFuel + " spawned fuel");
+    }
     // we do stuff
     const team = self.me.team;
     let selfOffer = self.last_offer[team];
@@ -201,7 +208,7 @@ var castleHelper = {
     }
 
     // Build pilgrims
-    if(!self.spawnedKarbonite || !self.spawnedFuel || !self.spawnedCrusaders){
+    if(!self.spawnedKarbonite && !self.spawnedFuel && !self.spawnedCrusaders){
       self.spawnedKarbonite = 0;
       self.spawnedFuel = 0;
       self.spawnedCrusaders = 0;
@@ -212,7 +219,7 @@ var castleHelper = {
     }
     if (self.karbonite >= 10 + ((self.step > 50 ? 1 : 5) * self.step) && self.fuel >= 100 && (self.spawnedKarbonite < self.managedKarbonite || self.spawnedFuel < self.managedFuel)) {
       self.log("spawning pilgrim");
-      let spawnKarbonite = (self.spawnedKarbonite <= self.spawnedFuel) || ((self.karbonite < 40 + 10 * self.step && self.spawnedKarbonite < self.managedKarbonite) || self.spawnedFuel >= self.managedFuel);
+      let spawnKarbonite = (self.spawnedKarbonite <= self.spawnedFuel);//) || ((self.karbonite < 40 + 10 * self.step && self.spawnedKarbonite < self.managedKarbonite) || self.spawnedFuel >= self.managedFuel);
       if (spawnKarbonite) self.spawnedKarbonite++;
       else self.spawnedFuel++;
       let location = {x: self.me.x, y: self.me.y};
@@ -230,7 +237,9 @@ var castleHelper = {
         targetResource = {x: randomDirection.x, y: randomDirection.y};
       }
       let pos = structureHelper.posTo6Bit(targetResource, self.map.length);
-      self.signal(parseInt((spawnKarbonite ? "1" : "2") + pos.x.toString() + pos.y.toString(), 10), 1);
+      if(pos){
+        self.signal(parseInt((spawnKarbonite ? "1" : "2") + pos.x.toString() + pos.y.toString(), 10), 1);
+      }
       if(randomDirection){
         self.log('Building a pilgrim at ' + (self.me.x + randomDirection.x) + ',' + (self.me.y + randomDirection.y));
         return self.buildUnit(SPECS.PILGRIM, randomDirection.x, randomDirection.y);
@@ -258,10 +267,13 @@ var castleHelper = {
           let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
           let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
 
-          self.log('Building a preacher at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
-
-          self.signal(parseInt(closestEnemy.x.toString() + closestEnemy.y.toString(), 10), 1);
-          return self.buildUnit(SPECS.PREACHER, randomDirection.x, randomDirection.y);
+          if(randomDirection){
+            self.log('Building a preacher at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
+            self.signal(parseInt(closestEnemy.x.toString() + closestEnemy.y.toString(), 10), 1);
+            return self.buildUnit(SPECS.PREACHER, randomDirection.x, randomDirection.y);
+          }else{
+            self.log("No random direction was found - cannot build");
+          }
         }
       } else {
         return self.attack(closestEnemy.x - self.me.x, closestEnemy.y - self.me.y);
@@ -273,18 +285,25 @@ var castleHelper = {
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
       let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
 
-      self.log('Building a prophet at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
-      return self.buildUnit(SPECS.PROPHET, randomDirection.x, randomDirection.y);
+      if(randomDirection){
+        self.log('Building a prophet at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
+        return self.buildUnit(SPECS.PROPHET, randomDirection.x, randomDirection.y);
+      }else{
+        self.log("No random direction was found - cannot build");
+      }
     }
 
     if (self.karbonite >= 50 && self.spawnedCrusaders < 4 && self.spawnedKarbonite > 0 && self.spawnedFuel > 0) {
-      self.spawnedCrusaders++;
       let location = {x: self.me.x, y: self.me.y};
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
       let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
-
-      self.log('Building a crusader at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
-      return self.buildUnit(SPECS.CRUSADER, randomDirection.x, randomDirection.y);
+      if(randomDirection){
+        self.spawnedCrusaders++;
+        self.log('Building a crusader at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
+        return self.buildUnit(SPECS.CRUSADER, randomDirection.x, randomDirection.y);
+      }else{
+        self.log("No random direction was found - cannot build");
+      }
     }
 
     // no action

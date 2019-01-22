@@ -41,7 +41,7 @@ var structureHelper = {
     let possibleDirections = [];
     for(var x=-1;x<=1; x++){
       for(var y=-1;y<=1; y++){
-        if (x < 0 || x >= fullMap.length || y < 0 || y >= fullMap.length) continue;
+        if (loc.x < 0 || loc.x >= fullMap.length || loc.y < 0 || loc.y >= fullMap.length) continue;
         let dir = {x:x, y:y};
         let testLocation = {x: (loc.x + dir.x), y: (loc.y-dir.y)};
         if(structureHelper.isPassable(testLocation, fullMap, robotMap)){
