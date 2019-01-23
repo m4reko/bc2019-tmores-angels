@@ -85,13 +85,13 @@ var unitHelper = {
   getClosestAttackableOpponent : (me, robots) => {
     var closestRobot = false;
     var shortestDist = Infinity;
-    for(var i=0; i<robots.length; i++){
+    for (var i=0; i<robots.length; i++) {
       let r = robots[i];
       const dist = unitHelper.sqDist(r, me);
       if (r.team !== me.team
           && SPECS.UNITS[me.unit].ATTACK_RADIUS[0] <= dist
-          && dist <= SPECS.UNITS[me.unit].ATTACK_RADIUS[1] ){
-          if(dist<shortestDist){
+          && dist <= SPECS.UNITS[me.unit].ATTACK_RADIUS[1]) {
+          if (dist<shortestDist) {
             closestRobot = r;
             shortestDist = dist;
           }
@@ -153,14 +153,15 @@ var unitHelper = {
 
   // createDistanceMap creates a distancemap according to the destination
   // should be stored and used with getNextDirection method
-  createDistanceMap: (dest, fullMap, robotMap) =>{
+  createDistanceMap: (dest, fullMap, robotMap, danger = [], self = false) => {
     let distMap = []; // Init distMap
     for (let y = 0; y < fullMap.length; y++) {
       distMap[y] = [];
       for (let x = 0; x < fullMap.length; x++) {
-        distMap[y].push(1000);
+        distMap[y].push(null);
       }
     }
+    if (self) self.log("Trying to create distancemap from: " + dest.x + ", " + dest.y);
     distMap[dest.y][dest.x] = 0;
     let done = false;
     let current_location = dest;
@@ -178,14 +179,21 @@ var unitHelper = {
             y: current_location.y + direction.y
           };
 
-          if (new_location.y >= 0 && new_location.y < fullMap.length &&
-              new_location.x >= 0 && new_location.x < fullMap.length &&
-              distMap[new_location.y][new_location.x] >= 1000) {
-            if (!unitHelper.isPassable(new_location, fullMap, robotMap)) {
-              distMap[new_location.y][new_location.x] = -2;
-            } else {
-              distMap[new_location.y][new_location.x] = moves + 1;
-              next_locations.push(new_location)
+          if (new_location.y >= 0 && new_location.y < fullMap.length && new_location.x >= 0 && new_location.x < fullMap.length) {
+            if (typeof distMap[new_location.y] !== 'undefined' && typeof distMap[new_location.y][new_location.x] !== 'undefined' && distMap[new_location.y][new_location.x] === null) {
+              if (!unitHelper.isPassable(new_location, fullMap, robotMap)) {
+                distMap[new_location.y][new_location.x] = -2;
+              } else {
+                distMap[new_location.y][new_location.x] = moves + 1;
+                if (danger.length) {
+                  for (const enemy of danger) {
+                    // check if spot is withing enemy vision
+                    let distToEnemy = unitHelper.sqDist({x: new_location.x, y: new_location.y}, enemy);
+                    if (!([SPECS.PILGRIM, SPECS.CASTLE, SPECS.CHURCH].includes(enemy.unit)) && distToEnemy <= SPECS.UNIT[enemy.unit].VISION_RADIUS) distMap[new_location.y][new_location.x] += 100;
+                  }
+                }
+                next_locations.push(new_location)
+              }
             }
           }
         }
@@ -200,18 +208,37 @@ var unitHelper = {
     return distMap;
   },
 
+  getChurchBuildPosition: (location, map, fuelMap, karbMap, robotMap) => {
+    let mostResources = 0;
+    let bestLocation = {x: 0, y: 0};
+    for (const newDirection of unitHelper.directions) {
+      let newLocation = {
+        x: location.x + newDirection.x,
+        y: location.y + newDirection.y
+      };
+      if (newLocation.x < 0 || newLocation.x >= map.length || newLocation.y < 0 || newLocation.y >= map.length) continue;
+      if (!map[newLocation.y][newLocation.x] || fuelMap[newLocation.y][newLocation.y] || karbMap[newLocation.y][newLocation.x] || robotMap[newLocation.y][newLocation.x] > 0) continue;
+      let nearby = unitHelper.getNearbyResourceLocations(newLocation, karbMap, fuelMap, 1);
+      if (nearby > mostResources) {
+        bestLocation = newLocation;
+        mostResources = nearby;
+      }
+    }
+    return bestLocation;
+  },
+
   // Gives closest position where a church could be built
-  getOptimalChurchLocation: (location, churchProspectMap) =>{
+  getOptimalChurchLocation: (location, churchProspectMap) => {
     let topValue = 0;
     let result = {x:0, y:0};
 
-    for(var y=0; y<churchProspectMap.length;y++){
-      for(var x=0; x<churchProspectMap.length;x++){
-        if(churchProspectMap[y][x] == topValue){
-          if(unitHelper.sqDist({x:x, y:y}, location) < unitHelper.sqDist(result, location)){
+    for (var y = 0; y < churchProspectMap.length; y++) {
+      for (var x = 0; x < churchProspectMap.length; x++) {
+        if (churchProspectMap[y][x] == topValue) {
+          if (unitHelper.sqDist({x:x, y:y}, location) < unitHelper.sqDist(result, location)) {
             result = {x:x, y:y};
           }
-        }else if(churchProspectMap[y][x] > topValue){
+        } else if (churchProspectMap[y][x] > topValue) {
           topValue = churchProspectMap[y][x];
           result = {x:x, y:y}
         }
@@ -221,19 +248,26 @@ var unitHelper = {
   },
 
   // Create a 2d map with values, higher value is better position for churches
-  createChurchProspectMap: (fullMap, karboniteMap, fuelMap) =>{
+  createChurchProspectMap: (fullMap, karboniteMap, fuelMap, seenChurches = []) => {
     let churchProspectMap = [];
 
-    for(var y=0; y<fullMap.length;y++){
-      churchProspectMap[y] = [];
+    for (var y = 0; y < fullMap.length; y++) {
+      churchProspectMap.push([]);
     }
 
-    for(var y=0; y<fullMap.length;y++){
-      for(var x=0; x<fullMap.length;x++){
-        if(fullMap[y][x] && !karboniteMap[y][x] && !fuelMap[y][x]){
-          churchProspectMap[y][x] = (unitHelper.getNearbyResourceLocations({x:x, y:y}, karboniteMap, fuelMap, 4)).length;
-        }else{
-          churchProspectMap[y][x] = -1;
+    for (var y = 0; y < fullMap.length; y++) {
+      for (var x = 0; x < fullMap.length; x++) {
+        let nearbyChurch = false;
+        if (seenChurches.length) {
+          for (const church in seenChurches) {
+            let distToChurch = unitHelper.sqDist({x: x, y: y}, seenChurches[church]);
+            if (distToChurch <= 36) nearbyChurch = true;
+          }
+        }
+        if (fullMap[y][x] && !karboniteMap[y][x] && !fuelMap[y][x]) {
+          churchProspectMap[y].push((unitHelper.getNearbyResourceLocations({x:x, y:y}, karboniteMap, fuelMap, 5)).length);
+        } else {
+          churchProspectMap[y].push(-1);
         }
       }
     }
@@ -257,12 +291,13 @@ var unitHelper = {
   // Get all positions for resources within a square radius
   getNearbyResourceLocations: (loc, karboniteMap, fuelMap, radius) => {
     let resourceLocations = [];
-    for(var y = loc.y-radius; y<=loc.y+radius; y++){
-      for(var x = loc.x-radius; x<=loc.x+radius; x++){
-        if(karboniteMap[y] && karboniteMap[y][x]){
-          resourceLocations.push( { x:x, y:y, resource:'karbonite'} );
-        }else if(fuelMap[y] && fuelMap[y][x]){
-          resourceLocations.push( { x:x, y:y, resource:'fuel'} );
+    for (var y = loc.y - radius; y <= loc.y + radius; y++) {
+      for (var x = loc.x - radius; x <= loc.x + radius; x++) {
+        if (unitHelper.sqDist({x: loc.x, y: loc.y}, {x: x, y: y}) > radius) continue;
+        if (karboniteMap[y] && karboniteMap[y][x]) {
+          resourceLocations.push({x:x, y:y, resource:'karbonite'});
+        } else if (fuelMap[y] && fuelMap[y][x]) {
+          resourceLocations.push({x:x, y:y, resource:'fuel'});
         }
       }
     }
@@ -296,6 +331,7 @@ var unitHelper = {
     for (var y = loc.y - range; y <= loc.y + range; y++){
       for (var x = loc.x - range; x <= loc.x + range; x++){
         if (y < distMap.length && x < distMap.length && x >= 0 && y >= 0) {
+          if (typeof distMap[y] === 'undefined' || typeof distMap[y][x] === 'undefined' || distMap[y][x] === null) continue;
           if (unitHelper.sqDist(loc, {x: x, y: y}) > range) continue;
           if (distMap[y][x] < currentValue && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {
             currentLocation.x = x;
@@ -308,13 +344,13 @@ var unitHelper = {
     return {y: currentLocation.y - loc.y, x: currentLocation.x - loc.x};
   },
 
-  getPossibleDirections : (loc, fullMap, robotMap) => {
+  getPossibleDirections: (loc, fullMap, robotMap) => {
     let possibleDirections = [];
-    for(var x=-1;x<=1; x++){
-      for(var y=-1;y<=1; y++){
+    for (var x =- 1; x <= 1; x++) {
+      for (var y =- 1; y <= 1; y++) {
         let dir = {x:x, y:y};
         let testLocation = {x: (loc.x + dir.x), y: (loc.y-dir.y)};
-        if(unitHelper.isPassable(testLocation, fullMap, robotMap)){
+        if (unitHelper.isPassable(testLocation, fullMap, robotMap)) {
           possibleDirections.push(dir);
         }
       }
