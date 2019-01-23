@@ -234,7 +234,7 @@ var castleHelper = {
       //let pos = structureHelper.posTo6Bit(targetResource, self.map.length);
       let pos = targetResource.y * self.map.length + targetResource.x;
       if (pos) {
-        self.signal(parseInt((spawnKarbonite ? "1" : "2") + pos.toString(), 10), 1);
+        self.signal(parseInt((spawnKarbonite ? "1" : "2") + pos.toString(), 10), 2);
       }
       if (randomDirection) {
         if (spawnKarbonite) self.spawnedKarbonite++;

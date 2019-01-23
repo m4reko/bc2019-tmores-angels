@@ -39,11 +39,15 @@ var pilgrimHelper = {
       }
     };
 
+    self.log("My castle is located at: " + self.castle.x + ", " + self.castle.y);
+
     let initTarget = null;
     if (self.step === 1) {
+      self.log("Hi I'm new");
       self.waitTurn = 0;
       if (self.isRadioing(self.castle)) {
-        if (self.castle.signal_radius === 1) {
+        self.log("My castle is sending radio");
+        if (self.castle.signal_radius === 2) {
           let signal = self.castle.signal;
           self.log("I recieved a signal");
           self.log("signal: " + signal);
@@ -109,28 +113,26 @@ var pilgrimHelper = {
       self.targetarea = initTarget;
       self.destination = self.targetarea;
     }
-    if ((!self.destination || !self.distanceMap) && (self.macro === 'mine_karbonite' || self.macro === 'mine_fuel')) {
-      if (self.task == 'build_church') {
-        self.log("Adding church as destination!");
-        self.destination = unitHelper.getChurchBuildPosition(location, self.map, self.fuel_map, self.karbonite_map, self.getVisibleRobotMap());
-        self.log(self.destination);
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
-      } else if (self.task == 'mine') {
-        if (self.macro === 'mine_karbonite') {
-          let closestKarbNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
-          self.destination = closestKarbNotOccupied;
-        } else if (self.macro === 'mine_fuel') {
-          let closestFuelNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
-          self.destination = closestFuelNotOccupied;
-        }
-      }
-    }
+    // if ((!self.destination || !self.distanceMap) && (self.macro === 'mine_karbonite' || self.macro === 'mine_fuel')) {
+    //   if (self.task == 'build_church') {
+    //     self.log("Adding church as destination!");
+    //     self.destination = unitHelper.getChurchBuildPosition(location, self.map, self.fuel_map, self.karbonite_map, self.getVisibleRobotMap());
+    //     self.log(self.destination);
+    //   } else if (self.task == 'mine') {
+    //     if (self.macro === 'mine_karbonite') {
+    //       let closestKarbNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
+    //       self.destination = closestKarbNotOccupied;
+    //     } else if (self.macro === 'mine_fuel') {
+    //       let closestFuelNotOccupied = unitHelper.getClosestUnoccupiedKarbonite(location, self.getFuelMap(), self.getVisibleRobotMap());
+    //       self.destination = closestFuelNotOccupied;
+    //     }
+    //   }
+    // }
 
     let distanceToDestination = Infinity;
 
     if (self.destination) {
       distanceToDestination = unitHelper.sqDist(location, self.destination);
-      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
     }
 
     // return with mined stuff
@@ -140,7 +142,6 @@ var pilgrimHelper = {
         let oldDest = self.destination;
         self.task = microTasks[self.macro][0]; // mine
         self.destination = self.targetarea;
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
         return self.give(
           oldDest.x - location.x,
           oldDest.y - location.y,
@@ -193,8 +194,12 @@ var pilgrimHelper = {
             self.task = microTasks[self.macro][2]; // stash
             target = self.castle;
           }
-          self.destination = target;
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
+          if (unitHelper.sqDist(location, target) > 2) {
+            self.destination = target;
+          } else {
+            self.task = microTasks[self.macro][0]; // keep mining
+            return self.give(target.x - location.x, target.y - location.y, self.me.karbonite, self.me.fuel);
+          }
         } else {
           return self.mine();
         }
@@ -208,8 +213,7 @@ var pilgrimHelper = {
         if (self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
           if (self.waitTurn) self.waitTurn = 0;
           // If destination occupied, get new closest source
-          self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
+          // self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
         }
       }
     }
@@ -227,7 +231,6 @@ var pilgrimHelper = {
           } else {
             self.task = microTasks[self.macro][0]; // mine
             self.destination = self.targetarea;
-            self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
           }
 
           return self.buildUnit(
@@ -244,12 +247,10 @@ var pilgrimHelper = {
             // stash at castle instead
             self.task = microTasks[self.macro][2]; // stash
             self.destination = {x: self.castle.x, y: self.castle.y};
-            self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
           } else {
             // we can mine some more instead
             self.task = microTasks[self.macro][0];
             self.destination = self.targetarea;
-            self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
           }
         }
       } else {
@@ -265,7 +266,6 @@ var pilgrimHelper = {
             self.task = microTasks[self.macro][0]; // mine
             self.destination = self.targetarea;
           }
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
         }
       }
     }
@@ -273,6 +273,8 @@ var pilgrimHelper = {
     if (self.destination) {
       self.log("My task is: " + self.task);
       self.log("My destination is: " + self.destination.x + ", " + self.destination.y);
+      self.log("Trying to create distance map");
+      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies, self);
       // for (let y = 0; y < self.map.length; y++) {
       //   let row = "";
       //   for (let x = 0; x < self.map[y].length; x++) {
@@ -295,13 +297,13 @@ var pilgrimHelper = {
       //   self.log(row);
       // }
       let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
-!unitHelper.isPassable({x: location.x + nextDirection.x, y: location.y + nextDirection.y}, self.map, self.getVisibleRobotMap())
-       if (!unitHelper.isPassable({x: location.x + nextDirection.x, y: location.y + nextDirection.y}, self.map, self.getVisibleRobotMap())) {
-        // Reload map and direction if someone is blocking
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
-        nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
-        self.log("New path because my path was blocked :@");
-      }
+      //  if (!unitHelper.isPassable({x: location.x + nextDirection.x, y: location.y + nextDirection.y}, self.map, self.getVisibleRobotMap())) {
+      //   // Reload map and direction if someone is blocking
+      //   self.log("Trying to make distance map from 314");
+      //   self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies, self);
+      //   nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+      //   self.log("New path because my path was blocked :@");
+      // }
 
       self.log("Moving pilgrim to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
       // self.log("Passable: " + self.map[location.y + nextDirection.y][location.x + nextDirection.x]);

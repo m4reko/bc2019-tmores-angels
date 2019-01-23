@@ -153,14 +153,15 @@ var unitHelper = {
 
   // createDistanceMap creates a distancemap according to the destination
   // should be stored and used with getNextDirection method
-  createDistanceMap: (dest, fullMap, robotMap, danger = []) => {
+  createDistanceMap: (dest, fullMap, robotMap, danger = [], self = false) => {
     let distMap = []; // Init distMap
     for (let y = 0; y < fullMap.length; y++) {
       distMap[y] = [];
       for (let x = 0; x < fullMap.length; x++) {
-        distMap[y].push(100000);
+        distMap[y].push(null);
       }
     }
+    if (self) self.log("Trying to create distancemap from: " + dest.x + ", " + dest.y);
     distMap[dest.y][dest.x] = 0;
     let done = false;
     let current_location = dest;
@@ -179,7 +180,7 @@ var unitHelper = {
           };
 
           if (new_location.y >= 0 && new_location.y < fullMap.length && new_location.x >= 0 && new_location.x < fullMap.length) {
-            if (distMap[new_location.y][new_location.x] >= 100000) {
+            if (typeof distMap[new_location.y] !== 'undefined' && typeof distMap[new_location.y][new_location.x] !== 'undefined' && distMap[new_location.y][new_location.x] === null) {
               if (!unitHelper.isPassable(new_location, fullMap, robotMap)) {
                 distMap[new_location.y][new_location.x] = -2;
               } else {
@@ -325,6 +326,7 @@ var unitHelper = {
     for (var y = loc.y - range; y <= loc.y + range; y++){
       for (var x = loc.x - range; x <= loc.x + range; x++){
         if (y < distMap.length && x < distMap.length && x >= 0 && y >= 0) {
+          if (typeof distMap[y] === 'undefined' || typeof distMap[y][x] === 'undefined' || distMap[y][x] === null) continue;
           if (unitHelper.sqDist(loc, {x: x, y: y}) > range) continue;
           if (distMap[y][x] < currentValue && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {
             currentLocation.x = x;
@@ -337,13 +339,13 @@ var unitHelper = {
     return {y: currentLocation.y - loc.y, x: currentLocation.x - loc.x};
   },
 
-  getPossibleDirections : (loc, fullMap, robotMap) => {
+  getPossibleDirections: (loc, fullMap, robotMap) => {
     let possibleDirections = [];
-    for(var x=-1;x<=1; x++){
-      for(var y=-1;y<=1; y++){
+    for (var x =- 1; x <= 1; x++) {
+      for (var y =- 1; y <= 1; y++) {
         let dir = {x:x, y:y};
         let testLocation = {x: (loc.x + dir.x), y: (loc.y-dir.y)};
-        if(unitHelper.isPassable(testLocation, fullMap, robotMap)){
+        if (unitHelper.isPassable(testLocation, fullMap, robotMap)) {
           possibleDirections.push(dir);
         }
       }
