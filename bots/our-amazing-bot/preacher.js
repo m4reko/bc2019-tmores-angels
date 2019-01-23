@@ -63,8 +63,10 @@ var preacherHelper = {
       self.log("Going towards enemy position given by castle:");
       self.log(location);
       self.log(self.destination);
+      self.log("next direction");
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+      self.log(nextDirection);
       return self.move(nextDirection.x, nextDirection.y);
     }
 
@@ -88,7 +90,7 @@ var preacherHelper = {
     // If at destination and no enemies nearby
     let newGuardPosition = unitHelper.getCastleGuardPosition(self.castle, self.map);
 
-    if(location.x == self.destination.x && location.y == self.destination.y){
+    if(location.x === self.destination.x && location.y === self.destination.y){
       if(self.task==="go_to_enemy"){
 
         self.task = "go_to_castle";
@@ -117,17 +119,21 @@ var preacherHelper = {
           // return self.move(nextDirection.x, nextDirection.y);
         }
       }
-    } else if(distanceToDestination<=SPECS.PREACHER.VISION_RADIUS){
+    } else if(distanceToDestination<=4){
       if (self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
+        self.log("Location to guard is occupied")
         if (self.waitTurn) self.waitTurn = 0;
         // If destination occupied, get new closest source
         self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
     }
-
     self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
     let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+    if(nextDirection.x > 1 || nextDirection.y <-1 || nextDirection.y > 1 || nextDirection.x <-1){
+      self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
+      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+    }
+    self.log(nextDirection);
     self.log("Just moving preacher one step closer to: (" +(self.destination.x) + ", " +(self.destination.y) + ")");
     return self.move(nextDirection.x, nextDirection.y);
   }

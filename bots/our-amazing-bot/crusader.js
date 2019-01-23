@@ -13,6 +13,7 @@ var crusaderHelper = {
           // Set church as home if church
           self.castle = self.getVisibleRobots()
           .filter(robot => robot.team === self.me.team && robot.unit === SPECS.CHURCH)[0];
+          self.spawnedByChurch = true;
         }
     }
     if (!self.castle) {
@@ -53,10 +54,11 @@ var crusaderHelper = {
       let interestingLocations = [];
 
       if(self.task === "attack_opponent"){
-        self.log("Adding mirrored spawn as destination!");
-        self.log(self.spawnPoint);
-        self.log(self.mirroredSpawn);
+        self.log("Adding mirrored spawn as destination! or randomkarb if spawned by church");
         self.destination = self.mirroredSpawn;
+        if(self.spawnedByChurch){
+          self.destination = randomKarb;
+        }
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
       else if(self.task === "guard_castle"){
@@ -111,6 +113,9 @@ var crusaderHelper = {
         self.task = "attack_opponent";
         self.log("Go back to mirroredSpawn!");
         self.destination = self.mirroredSpawn;
+        if(self.spawnedByChurch){
+          self.destination = randomKarb;
+        }
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
     }

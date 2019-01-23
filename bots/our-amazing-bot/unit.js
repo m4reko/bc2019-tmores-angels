@@ -306,8 +306,8 @@ var unitHelper = {
 
   getCastleGuardPosition: (castle, fullMap)=>{
     let guardPositions = [];
-    for (var y = castle.y - 2; y < castle.y + 2; y++) {
-      for (var x = castle.x - 2; x < castle.x + 2; x++) {
+    for (var y = castle.y - 4; y < castle.y + 4; y++) {
+      for (var x = castle.x - 4; x < castle.x + 4; x++) {
         if (fullMap[y] && fullMap[y][x]){
           if(x == castle.x && y == castle.y) continue;
           if( (castle.x % 2 == castle.y % 2) && (y % 2 == x % 2) ){
