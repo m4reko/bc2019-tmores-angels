@@ -88,22 +88,23 @@ var preacherHelper = {
     // If at destination and no enemies nearby
     let newGuardPosition = unitHelper.getCastleGuardPosition(self.castle, self.map);
 
-    if(distanceToDestination <= 2){
-      if(self.task=="go_to_enemy"){
+    if(location.x == self.destination.x && location.y == self.destination.y){
+      if(self.task==="go_to_enemy"){
 
         self.task = "go_to_castle";
         self.destination = newGuardPosition;
-        self.log("going to castle instead");
+        self.log("going to guard castle instead");
         self.log(self.destination);
+        self.log("castle position: (" + self.castle.x + ", " + self.castle.y + ")");
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
         let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
-        self.log("Moving preacher towards castle: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
         return self.move(nextDirection.x, nextDirection.y);
 
-      }else if(self.task=="go_to_castle"){
+      }else if(self.task==="go_to_castle"){
         self.log("Standing still");
+        return null;
         if(self.target){
-          // stand still
+          // TODO: Get new position from castle? then go there!
           // self.task="go_to_enemy";
           // self.destination = self.target;
           //
@@ -116,16 +117,19 @@ var preacherHelper = {
           // return self.move(nextDirection.x, nextDirection.y);
         }
       }
-    }else{
-      self.log("Just moving..");
-      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-      let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
-      self.log("Just moving preacher: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
-      return self.move(nextDirection.x, nextDirection.y);
+    } else if(distanceToDestination<=SPECS.PREACHER.VISION_RADIUS){
+      if (self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
+        if (self.waitTurn) self.waitTurn = 0;
+        // If destination occupied, get new closest source
+        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+      }
     }
-    self.log("No action..");
-    // no action
-    return null;
+
+    self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+    let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+    self.log("Just moving preacher one step closer to: (" +(self.destination.x) + ", " +(self.destination.y) + ")");
+    return self.move(nextDirection.x, nextDirection.y);
   }
 };
 
