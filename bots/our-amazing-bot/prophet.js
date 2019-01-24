@@ -69,8 +69,9 @@ var prophetHelper = {
     if(self.task === "guard_castle"){
       // If at destination and no enemy to attack or walk towards,
       // go to new guard position
-      if(distanceToDestination<=2){
-        return; // stand in guard position
+      if(distanceToDestination==0){
+        self.log("At guard position now");
+        return null; // stand in guard position
       }
     }else if(self.task === "attack_opponent"){
 
