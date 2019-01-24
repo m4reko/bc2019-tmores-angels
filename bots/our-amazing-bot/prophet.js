@@ -71,7 +71,7 @@ var prophetHelper = {
       // If at destination and no enemy to attack or walk towards,
       // go to new guard position
       if (distanceToDestination === 0) {
-        self.log("At guard position now");
+        // self.log("At guard position now");
         return null; // stand in guard position
 
       } else if (distanceToDestination <= 4 && self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {

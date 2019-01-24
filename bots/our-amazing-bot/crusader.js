@@ -4,6 +4,7 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var crusaderHelper = {
   turn: self => {
+    self.log("Crusader:");
     // On the first turn, find out our base
     if (!self.castle) {
       // Set castle as home if castle

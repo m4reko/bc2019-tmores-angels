@@ -11,7 +11,7 @@ var preacherHelper = {
     }
 
     let location = {x: self.me.x, y: self.me.y};
-    let distanceToDestination = 10000;
+    let distanceToDestination = Infinity;
 
     if (self.destination) {
       distanceToDestination = unitHelper.sqDist(location, self.destination);
@@ -106,7 +106,7 @@ var preacherHelper = {
           // return self.move(nextDirection.x, nextDirection.y);
         }
       }
-    } else if(distanceToDestination<=4){
+    } else if (distanceToDestination <= 4) {
       if (self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
         self.log("Location to guard is occupied")
         if (self.waitTurn) self.waitTurn = 0;

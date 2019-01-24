@@ -22,7 +22,7 @@ class MyRobot extends BCAbstractRobot {
           [-1, -1]
         ];
         this.SK = 60;
-        this.SF = 100;
+        this.SF = 130;
         this.vision = 0;
         this.castleAmount = 0;
         this.castleNumber = null;
