@@ -49,37 +49,37 @@ var prophetHelper = {
     let closestOpponent = unitHelper.getClosestAttackableOpponent(self.me, nearbyRobots);
 
     // Attack if opponent nearby!
-    if(closestOpponent){
+    if (closestOpponent) {
       self.log("Attack opponent!");
       return self.attack(closestOpponent.x - location.x, closestOpponent.y - location.y);
-    }else{
+    } else {
       // Walk towards enemies within view range
-      for(var i = 0; i<nearbyRobots.length; i++){
-        if(nearbyRobots[i].team != self.me.team){
+      for (var i = 0; i < nearbyRobots.length; i++) {
+        if (nearbyRobots[i].team != self.me.team) {
           let previousDestination = self.destination;
           self.destination = nearbyRobots[i];
           self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-          let nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
+          let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
           self.destination = previousDestination;
           return self.move(nextDirection.x, nextDirection.y);
         }
       }
     }
 
-    if(self.task === "guard_castle"){
+    if (self.task === "guard_castle") {
       // If at destination and no enemy to attack or walk towards,
       // go to new guard position
-      if(distanceToDestination==0){
+      if (distanceToDestination === 0) {
         self.log("At guard position now");
         return null; // stand in guard position
       }
-    }else if(self.task === "attack_opponent"){
+    } else if (self.task === "attack_opponent") {
 
       // TODO: If there is a Message from other robot saying help, go there!
 
       // If at destination and no enemy to attack or walk towards,
       // go to random karbonite source just for fun
-      if(distanceToDestination<=9){
+      if (distanceToDestination <= 9) {
         self.log("Adding random karb as destination!");
         self.destination = randomKarb;
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
@@ -88,11 +88,11 @@ var prophetHelper = {
 
 
     // Walk towards destination
-    let nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
-    if(self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]){
+    let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
+    if (self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]) {
       // Reload map and direction if someone is blocking
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-      nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
+      nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
       self.log("New path because my path was blocked :@");
     }
     self.log("Moving Prophet to: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");

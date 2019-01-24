@@ -37,6 +37,23 @@ var structureHelper = {
     }
   },
 
+  getClosestResource: (location, resourceMap) => {
+    let shortestDist = Infinity;
+    let closestResource = location;
+    for (let y = 0; y < resourceMap.length; y++) {
+      for (let x = 0; x < resourceMap.length; x++) {
+        if (resourceMap[y][x]) {
+          let dist = nav.sqDist(location, {x: x, y: y});
+          if (dist < shortestDist) {
+            shortestDist = dist;
+            closestResource = {x: x, y: y, dist: dist};
+          }
+        }
+      }
+    }
+    return closestResource;
+  },
+
   getPossibleDirections : (loc, fullMap, robotMap) => {
     let possibleDirections = [];
     for(var x=-1;x<=1; x++){

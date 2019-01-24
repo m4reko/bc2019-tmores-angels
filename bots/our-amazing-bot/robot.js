@@ -21,6 +21,8 @@ class MyRobot extends BCAbstractRobot {
           [-1, -1],
           [-1, -1]
         ];
+        self.SK = 60;
+        self.SF = 100;
         this.vision = 0;
         this.castleAmount = 0;
         this.castleNumber = null;

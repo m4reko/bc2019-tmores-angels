@@ -344,7 +344,7 @@ var unitHelper = {
   },
 
   //Get next direction according to a distance map
-  getNextDirection: (loc, range, vision, distMap) => {
+  getNextDirection: (loc, range, vision, distMap, unitMap) => {
     let currentValue = 1000;
     let currentLocation = {x: 0, y: 0};
 

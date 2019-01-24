@@ -18,44 +18,31 @@ var preacherHelper = {
       self.log("distance from destination: " + distanceToDestination);
     }
 
-    if (self.isRadioing(self.castle)) {
-      // get position from castle to go to
-      if (self.castle.signal_radius === 1) {
-        let signal = self.castle.signal;
-        signal = signal.toString();
-        let xPos = 0;
-        let yPos = 0;
-        if (signal.length === 2) {
-          xPos = parseInt(signal.substring(0, 1), 10);
-          yPos = parseInt(signal.substring(1), 10);
-        } else if (signal.length === 3) {
-          xPos = parseInt(signal.substring(0, 1), 10);
-          yPos = parseInt(signal.substring(1), 10);
-          let testpos1 = [xPos, yPos];
-          let xPos2 = parseInt(signal.substring(0, 2), 10);
-          let yPos2 = parseInt(signal.substring(2), 10);
-          let testpos2 = [xPos2, yPos2];
-          let dist1 = unitHelper.nav.sqDist({x: self.me.x, y: self.me.y}, {x: testpos1[0], y: testpos1[1]});
-          let dist2 = unitHelper.nav.sqDist({x: self.me.x, y: self.me.y}, {x: testpos2[0], y: testpos2[1]});
-          if (dist1 > dist2) {
-            xPos = xPos2;
-            yPos = yPos2;
+    let initTarget = null;
+    if (self.step === 1) {
+      if (self.isRadioing(self.castle)) {
+        // get position from castle to go to
+        if (self.castle.signal_radius === 2) {
+          let signal = self.castle.signal;
+          self.log("I recieved a signal");
+          self.log("signal: " + signal);
+          if (signal.length) {
+            initTarget = {x: signal % self.map.length, y: (signal - signal % self.map.length) / self.map.length};
+            self.log("I'm going to " + initTarget.x + ", " + initTarget.y);
           }
-        } else {
-          xPos = parseInt(signal.substring(0, 2), 10);
-          yPos = parseInt(signal.substring(2), 10);
-        }
-        if(!self.target){
-          self.target = {x: xPos, y: yPos};
         }
       }
     }
 
-    if(!self.destination){
+    if (initTarget !== null) {
+      self.target = initTarget;
+    }
+
+    if (!self.destination) {
       // Start by going towards an enemy
-      if(self.target){
+      if (self.target) {
         self.destination = self.target;
-      }else{
+      } else {
         self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
       }
 
@@ -65,7 +52,7 @@ var preacherHelper = {
       self.log(self.destination);
       self.log("next direction");
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-      let nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
+      let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
       return self.move(nextDirection.x, nextDirection.y);
     }
 
@@ -82,7 +69,7 @@ var preacherHelper = {
       self.task = "go_to_enemy";
       self.destination = enemies[0];
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-      let nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
+      let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
       return self.move(nextDirection.x, nextDirection.y);
     }
 
@@ -98,7 +85,7 @@ var preacherHelper = {
         self.log(self.destination);
         self.log("castle position: (" + self.castle.x + ", " + self.castle.y + ")");
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-        let nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
+        let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
         self.log("Moving preacher towards castle: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
         return self.move(nextDirection.x, nextDirection.y);
 
@@ -128,11 +115,11 @@ var preacherHelper = {
       }
     }
     self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-    let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+    let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
     if(nextDirection.x > 1 || nextDirection.y <-1 || nextDirection.y > 1 || nextDirection.x <-1){
       self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-      let nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
+      let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
       self.log("Just moving preacher: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
       return self.move(nextDirection.x, nextDirection.y);
     }
