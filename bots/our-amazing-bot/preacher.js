@@ -45,7 +45,7 @@ var preacherHelper = {
         self.task = "go_to_enemy";
         self.destination = self.target;
       } else {
-        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
+        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map, self.fuel_map);
       }
       self.log("Going towards enemy position given by castle:");
       self.log(location);
@@ -71,7 +71,7 @@ var preacherHelper = {
     if (location.x === self.destination.x && location.y === self.destination.y) {
       if (self.task==="go_to_enemy") {
         self.task = "go_to_castle";
-        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
+        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map, self.fuel_map);
         self.log("going to guard castle instead");
         self.log(self.destination);
         self.log("castle position: (" + self.castle.x + ", " + self.castle.y + ")");
@@ -97,7 +97,7 @@ var preacherHelper = {
         self.log("Location to guard is occupied")
         if (self.waitTurn) self.waitTurn = 0;
         // If destination occupied, get new closest source
-        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
+        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map, self.fuel_map);
       }
     }
 

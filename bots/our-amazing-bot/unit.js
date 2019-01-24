@@ -339,7 +339,7 @@ var unitHelper = {
     return resourceLocations;
   },
 
-  getCastleGuardPosition: (location, castle, fullMap, robotMap, karbMap) => {
+  getCastleGuardPosition: (location, castle, fullMap, robotMap, karbMap, fuelMap) => {
     let guardPosition = {};
     let shortestDist = Infinity;
     let castlePos = (castle.x + castle.y) % 2;
@@ -348,6 +348,7 @@ var unitHelper = {
       for (let x = location.x - 10; x < location.x + 10; x++) {
         if (fullMap[y] && fullMap[y][x] && robotMap[y] && robotMap[y][x] === 0) {
           if (x === castle.x && y === castle.y) continue;
+          if (karbMap[y][x] || fuelMap[y][x]) continue;
           let dist = unitHelper.sqDist(castle, {x: x, y: y});
           if (dist < shortestDist) {
             if ((y + x) % 2 === castlePos) {
@@ -379,23 +380,29 @@ var unitHelper = {
   //Get next direction according to a distance map
   getNextDirection: (loc, range, vision, distMap, unitMap) => {
     let currentValue = 1000;
-    let currentLocation = {x: 0, y: 0};
+    let currentLocations = [];
 
     // Test all positions in range and find the one closest to 0
-    for (var y = loc.y - range; y <= loc.y + range; y++){
-      for (var x = loc.x - range; x <= loc.x + range; x++){
+    for (var y = loc.y - range; y <= loc.y + range; y++) {
+      for (var x = loc.x - range; x <= loc.x + range; x++) {
         if (y < distMap.length && x < distMap.length && x >= 0 && y >= 0) {
-          if (typeof distMap[y] === 'undefined' || typeof distMap[y][x] === 'undefined' || distMap[y][x] === null || unitMap[y][x] > 0) continue;
+          if (typeof distMap === 'undefined' || typeof distMap[y] === 'undefined' || typeof distMap[y][x] === 'undefined' || distMap[y][x] === null || unitMap[y][x] > 0) continue;
           let dist = unitHelper.sqDist(loc, {x: x, y: y});
           if (dist > range || dist > vision) continue;
           if (distMap[y][x] < currentValue && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {
-            currentLocation.x = x;
-            currentLocation.y = y;
+            currentLocations = [];
+            currentLocations.push({x: x, y: y, dist: dist});
             currentValue = distMap[y][x];
+          } else if (distMap[y][x] === currentValue && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {
+            currentLocations.push({x: x, y: y, dist: dist})
           }
         }
       }
     }
+    currentLocations.sort((a, b) => {
+      return b.dist - a.dist;
+    });
+    let currentLocation = currentLocations.pop();
     return {y: currentLocation.y - loc.y, x: currentLocation.x - loc.x};
   },
 
