@@ -157,7 +157,7 @@ var pilgrimHelper = {
     //   if (distanceToDestination <= 2) {
     //     self.task = microTasks[self.macro][0];
     //     let distanceToCastle = unitHelper.sqDist(location, self.castle);
-    //     let distanceToChurch = unitHelper.sqDist(location, unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.type === SPECS.CHURCH)));
+    //     let distanceToChurch = unitHelper.sqDist(location, unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH)));
     //     if (isNaN(distanceToChurch)) distanceToChurch = Infinity;
     //     if (distanceToCastle >= 25 && distanceToChurch >= 25) {
     //       self.task = microTasks[self.macro][1]; // build church
@@ -179,12 +179,16 @@ var pilgrimHelper = {
         if (self.me.karbonite > 18 || self.me.fuel > 90) {
           self.task = microTasks[self.macro][2]; // stash
           let distanceToCastle = unitHelper.sqDist(location, self.castle);
-          let target = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.type === SPECS.CHURCH));
+          self.log("I see these churces: " + self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
+          let target = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
+          self.log("This is my closest church");
           if (!target) {
             if (self.karbonite >= 50 && self.fuel >= 200) {
               if (distanceToCastle > 25) {
-                self.task = microTasks[self.macro][1]; // build church
+                self.task = microTasks[self.macro][0]; // build church
                 target = unitHelper.getChurchBuildPosition(location, self.map, self.fuel_map, self.karbonite_map, self.getVisibleRobotMap());
+                self.log("I'm trying to build here: " + target.x + ", " + target.y);
+                return self.buildUnit(SPECS.CHURCH, target.x - location.x, target.y - location.y);
               }
             }
           }
@@ -254,7 +258,7 @@ var pilgrimHelper = {
           }
         }
       } else {
-        let closestChurch = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.type === SPECS.CHURCH));
+        let closestChurch = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
         if (unitHelper.sqDist(location, closestChurch) <= 25) {
           // there's another church nearby
           if (self.me.karbonite > 18 || self.me.fuel > 90) {
@@ -274,7 +278,7 @@ var pilgrimHelper = {
       self.log("My task is: " + self.task);
       self.log("My destination is: " + self.destination.x + ", " + self.destination.y);
       self.log("Trying to create distance map");
-      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies, self);
+      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
       // for (let y = 0; y < self.map.length; y++) {
       //   let row = "";
       //   for (let x = 0; x < self.map[y].length; x++) {
@@ -296,7 +300,7 @@ var pilgrimHelper = {
       //   }
       //   self.log(row);
       // }
-      let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+      let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap);
       //  if (!unitHelper.isPassable({x: location.x + nextDirection.x, y: location.y + nextDirection.y}, self.map, self.getVisibleRobotMap())) {
       //   // Reload map and direction if someone is blocking
       //   self.log("Trying to make distance map from 314");

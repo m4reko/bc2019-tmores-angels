@@ -214,7 +214,7 @@ var castleHelper = {
       self.managedKarbonite = 0;
       self.managedFuel = 0;
     }
-    if (self.karbonite >= 10 + ((self.step > 50 ? 1 : 5) * self.step) && self.fuel >= 100 && (self.spawnedKarbonite < self.managedKarbonite || self.spawnedFuel < self.managedFuel)) {
+    if (self.karbonite >= 20 && self.fuel >= 100 && (self.spawnedKarbonite < self.managedKarbonite || self.spawnedFuel < self.managedFuel)) {
       self.log("spawning pilgrim");
       let spawnKarbonite = (self.spawnedKarbonite <= self.spawnedFuel);//) || ((self.karbonite < 40 + 10 * self.step && self.spawnedKarbonite < self.managedKarbonite) || self.spawnedFuel >= self.managedFuel);
       let location = {x: self.me.x, y: self.me.y};

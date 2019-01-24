@@ -21,6 +21,7 @@ class MyRobot extends BCAbstractRobot {
           [-1, -1],
           [-1, -1]
         ];
+        this.vision = 0;
         this.castleAmount = 0;
         this.castleNumber = null;
         this.heatMap = [];
@@ -32,16 +33,22 @@ class MyRobot extends BCAbstractRobot {
     identifyUnit() {
       if (this.me.unit === SPECS.PROPHET) {
         this.helper = prophetHelper;
+        this.vision = SPECS.PROPHET.VISION_RADIUS;
       } else if (this.me.unit === SPECS.CASTLE) {
         this.helper = castleHelper;
+        this.vision = SPECS.CASTLE.VISION_RADIUS;
       } else if (this.me.unit === SPECS.CHURCH) {
         this.helper = churchHelper;
+        this.vision = SPECS.CHURCH.VISION_RADIUS;
       } else if (this.me.unit === SPECS.PILGRIM) {
         this.helper = pilgrimHelper;
+        this.vision = SPECS.PILGRIM.VISION_RADIUS;
       } else if (this.me.unit === SPECS.CRUSADER) {
         this.helper = crusaderHelper;
+        this.vision = SPECS.CRUSADER.VISION_RADIUS;
       } else if (this.me.unit === SPECS.PREACHER) {
         this.helper = preacherHelper;
+        this.vision = SPECS.PREACHER.VISION_RADIUS;
       }
     }
 

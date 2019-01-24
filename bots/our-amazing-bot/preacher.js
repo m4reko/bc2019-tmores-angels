@@ -64,7 +64,7 @@ var preacherHelper = {
       self.log(location);
       self.log(self.destination);
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-      let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+      let nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
       return self.move(nextDirection.x, nextDirection.y);
     }
 
@@ -81,7 +81,7 @@ var preacherHelper = {
       self.task = "go_to_enemy";
       self.destination = enemies[0];
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-      let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+      let nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
       return self.move(nextDirection.x, nextDirection.y);
     }
 
@@ -96,7 +96,7 @@ var preacherHelper = {
         self.log("going to castle instead");
         self.log(self.destination);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-        let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+        let nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
         self.log("Moving preacher towards castle: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
         return self.move(nextDirection.x, nextDirection.y);
 
@@ -119,7 +119,7 @@ var preacherHelper = {
     }else{
       self.log("Just moving..");
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-      let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+      let nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
       self.log("Just moving preacher: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
       return self.move(nextDirection.x, nextDirection.y);
     }
