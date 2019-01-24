@@ -37,7 +37,8 @@ var prophetHelper = {
       }
       else if(self.task === "guard_castle"){
         self.log("Adding guard position as destination!");
-        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
+        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map, self.getVisibleRobotMap());
+        self.log(self.destination);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
 
@@ -69,19 +70,28 @@ var prophetHelper = {
     if(self.task === "guard_castle"){
       // If at destination and no enemy to attack or walk towards,
       // go to new guard position
-      if(distanceToDestination==0){
+      if(distanceToDestination === 0){
         self.log("At guard position now");
         return null; // stand in guard position
+
+      }else if(distanceToDestination<=2 && self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
+          self.log("Location to guard is occupied")
+          if (self.waitTurn) self.waitTurn = 0;
+          // If destination occupied, get new closest source
+          self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map, self.getVisibleRobotMap());
+          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
     }else if(self.task === "attack_opponent"){
 
       // TODO: If there is a Message from other robot saying help, go there!
 
       // If at destination and no enemy to attack or walk towards,
-      // go to random karbonite source just for fun
-      if(distanceToDestination<=9){
-        self.log("Adding random karb as destination!");
-        self.destination = randomKarb;
+      // go to guard position
+      if(distanceToDestination === 0){
+        self.task = "guard_castle";
+        self.log("Adding guard position as destination!");
+        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map, self.getVisibleRobotMap());
+        self.log(self.destination);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
     }

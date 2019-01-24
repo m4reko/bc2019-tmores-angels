@@ -210,7 +210,7 @@ var castleHelper = {
       self.spawnedFuel = 0;
       self.spawnedCrusaders = 0;
     }
-    if (!self.managedKarbonite || !self.managedFuel) {
+    if (!self.managedKarbonite && !self.managedFuel) {
       self.managedKarbonite = 0;
       self.managedFuel = 0;
     }

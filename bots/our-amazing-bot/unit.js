@@ -325,22 +325,31 @@ var unitHelper = {
     return resourceLocations;
   },
 
-  getCastleGuardPosition: (castle, fullMap)=>{
-    let guardPositions = [];
-    for (var y = castle.y - 4; y < castle.y + 4; y++) {
-      for (var x = castle.x - 4; x < castle.x + 4; x++) {
-        if (fullMap[y] && fullMap[y][x]){
-          if(x == castle.x && y == castle.y) continue;
-          if( (castle.x % 2 == castle.y % 2) && (y % 2 == x % 2) ){
-            guardPositions.push({x: x, y: y}); // Chess board pattern
-          }else if( (castle.x % 2 != castle.y % 2) && (y % 2 != x % 2) ){
-            guardPositions.push({x: x, y: y}); // Chess board pattern
-          }
+  getCastleGuardPosition: (castle, fullMap, robotMap)=>{
+    let guardPosition = {};
+    let dist = Infinity;
 
+    for (var y = castle.y - 7; y < castle.y + 7; y++) {
+      for (var x = castle.x - 7; x < castle.x + 7; x++) {
+        if (fullMap[y] && fullMap[y][x] && robotMap[y][x]<=0){
+
+          if(x == castle.x && y == castle.y) continue;
+
+          if( unitHelper.sqDist(castle, { x:x, y:y }) <= dist ){
+
+            if( (castle.x % 2 == castle.y % 2) && (y % 2 == x % 2) ){
+              guardPosition = {x: x, y: y}; // Chess board pattern
+              dist = unitHelper.sqDist(castle, {x:x, y:y});
+            }else if( (castle.x % 2 != castle.y % 2) && (y % 2 != x % 2) ){
+              guardPosition = {x: x, y: y}; // Chess board pattern
+              dist = unitHelper.sqDist(castle, {x:x, y:y});
+            }
+
+          }
         }
       }
     }
-    return guardPositions[Math.floor(Math.random() * guardPositions.length)]
+    return guardPosition;
   },
 
   //Get next direction according to a distance map
