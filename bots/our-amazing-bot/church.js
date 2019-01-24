@@ -16,18 +16,23 @@ var churchHelper = {
     //   }
     // }
 
-    // if (self.karbonite >= 25 + self.SK && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 50) / 50 + 1))) {
-    //   let location = {x: self.me.x, y: self.me.y};
-    //   let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
-    //   let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
-    //
-    //   if (randomDirection) {
-    //     self.log('Building a prophet at ' + (self.me.x + randomDirection.x) + ',' + (self.me.y + randomDirection.y));
-    //     return self.buildUnit(SPECS.PROPHET, randomDirection.x, randomDirection.y);
-    //   } else {
-    //     self.log("No random direction was found - cannot build");
-    //   }
-    // }
+    const allies = self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.PROPHET);
+
+    if(!self.spawnedProphets) self.spawnedProphets = 0;
+
+    if (self.karbonite >= 30 && allies.length < 25) {
+      let location = {x: self.me.x, y: self.me.y};
+      let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
+      let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+
+      if (randomDirection) {
+        self.spawnedProphets++;
+        self.log('Church building a prophet at ' + (self.me.x + randomDirection.x) + ',' + (self.me.y + randomDirection.y));
+        return self.buildUnit(SPECS.PROPHET, randomDirection.x, randomDirection.y);
+      } else {
+        self.log("No random direction was found - cannot build");
+      }
+    }
 
 
     return null;
