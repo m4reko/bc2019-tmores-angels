@@ -94,7 +94,6 @@ var pilgrimHelper = {
         if (self.waitTurn) self.waitTurn = 0;
         // If at destination
         if (self.me.karbonite > 18 || self.me.fuel > 90) {
-          self.task = tasks[1]; // stash
           let target = {x: 0, y: 0};
           if (self.stashTarget === null) {
             let distanceToCastle = unitHelper.sqDist(location, self.castle);
@@ -104,7 +103,6 @@ var pilgrimHelper = {
             if (!target) {
               if (self.karbonite >= 50 && self.fuel >= 200) {
                 if (distanceToCastle > 25) {
-                  self.task = tasks[0]; // mine
                   target = unitHelper.getChurchBuildPosition(location, self.map, self.fuel_map, self.karbonite_map, self.getVisibleRobotMap());
                   self.log("I'm trying to build here: " + target.x + ", " + target.y);
                   if (target.x !== -1 && target.y !== -1) {
@@ -117,7 +115,6 @@ var pilgrimHelper = {
             if (!target) target = self.castle;
             let distanceToChurch = unitHelper.sqDist(location, target);
             if (distanceToCastle <= distanceToChurch) {
-              self.task = tasks[1]; // stash
               target = self.castle;
             }
             self.stashTarget = target;
@@ -125,6 +122,7 @@ var pilgrimHelper = {
             target = self.stashTarget;
           }
           if (unitHelper.sqDist(location, target) > 2) {
+            self.tasks = tasks[1];
             self.destination = target;
           } else {
             self.task = tasks[0]; // keep mining
@@ -153,7 +151,7 @@ var pilgrimHelper = {
       self.log("My destination is: " + self.destination.x + ", " + self.destination.y);
       self.log("Trying to create distance map");
       if (self.destination !== self.lastDestination) {
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, enemies);
         self.lastDestination = self.destination;
       }
       let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());

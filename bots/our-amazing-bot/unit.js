@@ -169,7 +169,7 @@ var unitHelper = {
 
   // createDistanceMap creates a distancemap according to the destination
   // should be stored and used with getNextDirection method
-  createDistanceMap: (dest, fullMap, robotMap, danger = [], range = 2) => {
+  createDistanceMap: (dest, fullMap, danger = [], range = 2) => {
     let distMap = []; // Init distMap
     for (let y = 0; y < fullMap.length; y++) {
       distMap[y] = [];
@@ -197,7 +197,7 @@ var unitHelper = {
 
           if (new_location.y >= 0 && new_location.y < fullMap.length && new_location.x >= 0 && new_location.x < fullMap.length) {
             if (typeof distMap[new_location.y] !== 'undefined' && typeof distMap[new_location.y][new_location.x] !== 'undefined' && distMap[new_location.y][new_location.x] === null) {
-              if (!unitHelper.isPassable(new_location, fullMap, robotMap)) {
+              if (!fullMap[new_location.y][new_location.x]) {
                 distMap[new_location.y][new_location.x] = -2;
                 if (current_location.z < range - 1) {
                   new_location.z = 1;
@@ -361,7 +361,7 @@ var unitHelper = {
     for (var y = loc.y - range; y <= loc.y + range; y++){
       for (var x = loc.x - range; x <= loc.x + range; x++){
         if (y < distMap.length && x < distMap.length && x >= 0 && y >= 0) {
-          if (typeof distMap[y] === 'undefined' || typeof distMap[y][x] === 'undefined' || distMap[y][x] === null) continue;
+          if (typeof distMap[y] === 'undefined' || typeof distMap[y][x] === 'undefined' || distMap[y][x] === null || unitMap[y][x] > 0) continue;
           let dist = unitHelper.sqDist(loc, {x: x, y: y});
           if (dist > range || dist > vision) continue;
           if (distMap[y][x] < currentValue && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {

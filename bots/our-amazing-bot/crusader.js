@@ -82,7 +82,7 @@ var crusaderHelper = {
         if (nearbyRobots[i].team != self.me.team) {
           let previousDestination = self.destination;
           self.destination = nearbyRobots[i];
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), 3);
+          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, 3);
           let nextDirection = unitHelper.getNextDirection(location, 9, self.vision, self.distanceMap, self.getVisibleRobotMap());
           self.destination = previousDestination;
           return self.move(nextDirection.x, nextDirection.y);
@@ -118,7 +118,7 @@ var crusaderHelper = {
 
     if (self.destination) {
       // Walk towards destination
-      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), 3);
+      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, 3);
       let nextDirection = unitHelper.getNextDirection(location, 9, self.vision, self.distanceMap, self.getVisibleRobotMap());
       self.log("Moving crusader to: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
       return self.move(nextDirection.x, nextDirection.y);

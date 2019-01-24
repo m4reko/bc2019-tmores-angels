@@ -33,13 +33,13 @@ var prophetHelper = {
       if(self.task === "attack_opponent"){
         self.log("Adding mirrored position as destination!");
         self.destination = unitHelper.reflect(self.me, self.getPassableMap(), self.me.id % 2 === 0);
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
       }
       else if(self.task === "guard_castle"){
         self.log("Adding guard position as destination!");
         self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
         self.log(self.destination);
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
       }
 
       distanceToDestination = unitHelper.sqDist(location, self.destination);
@@ -59,7 +59,7 @@ var prophetHelper = {
         if (nearbyRobots[i].team != self.me.team) {
           let previousDestination = self.destination;
           self.destination = nearbyRobots[i];
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
           let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
           self.destination = previousDestination;
           return self.move(nextDirection.x, nextDirection.y);
@@ -70,40 +70,29 @@ var prophetHelper = {
     if (self.task === "guard_castle") {
       // If at destination and no enemy to attack or walk towards,
       // go to new guard position
-<<<<<<< HEAD
       if (distanceToDestination === 0) {
-=======
-      if(distanceToDestination === 0){
->>>>>>> 6b1e4a4088bd5b34d6fea2d3f593503cdb06fc43
         self.log("At guard position now");
         return null; // stand in guard position
 
-      }else if(distanceToDestination<=4 && self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
+      } else if (distanceToDestination <= 4 && self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
           self.log("Location to guard is occupied")
           if (self.waitTurn) self.waitTurn = 0;
           // If destination occupied, get new closest source
           self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
       }
     } else if (self.task === "attack_opponent") {
 
       // TODO: If there is a Message from other robot saying help, go there!
 
       // If at destination and no enemy to attack or walk towards,
-<<<<<<< HEAD
-      // go to random karbonite source just for fun
-      if (distanceToDestination <= 9) {
-        self.log("Adding random karb as destination!");
-        self.destination = randomKarb;
-=======
       // go to guard position
       if(distanceToDestination === 0){
         self.task = "guard_castle";
         self.log("Adding guard position as destination!");
         self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
         self.log(self.destination);
->>>>>>> 6b1e4a4088bd5b34d6fea2d3f593503cdb06fc43
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
       }
     }
 
@@ -112,7 +101,7 @@ var prophetHelper = {
     let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
     if (self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]) {
       // Reload map and direction if someone is blocking
-      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
       nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
       self.log("New path because my path was blocked :@");
     }
