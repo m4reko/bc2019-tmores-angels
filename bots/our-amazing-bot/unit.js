@@ -150,7 +150,7 @@ var unitHelper = {
   getClosestKarbonite : (loc, karbMap) => {
       const mapLen = karbMap.length;
       let closestLoc = null;
-      let closestDist = 100000; // Large number;
+      let closestDist = Infinity; // Large number;
       for (let y = 0; y < mapLen; y++) {
           for (let x = 0; x < mapLen; x++) {
               if (karbMap[y][x] && unitHelper.sqDist({x,y}, loc) < closestDist) {
@@ -339,15 +339,15 @@ var unitHelper = {
     return resourceLocations;
   },
 
-  getCastleGuardPosition: (location, castle, fullMap, robotMap) => {
+  getCastleGuardPosition: (location, castle, fullMap, robotMap, karbMap) => {
     let guardPosition = {};
     let shortestDist = Infinity;
     let castlePos = (castle.x + castle.y) % 2;
 
-    for (var y = location.y - 10; y < location.y + 10; y++) {
-      for (var x = location.x - 10; x < location.x + 10; x++) {
-        if (fullMap[y] && fullMap[y][x] && robotMap[y][x] === 0) {
-          if (x == castle.x && y == castle.y) continue;
+    for (let y = location.y - 10; y < location.y + 10; y++) {
+      for (let x = location.x - 10; x < location.x + 10; x++) {
+        if (fullMap[y] && fullMap[y][x] && robotMap[y] && robotMap[y][x] === 0) {
+          if (x === castle.x && y === castle.y) continue;
           let dist = unitHelper.sqDist(castle, {x: x, y: y});
           if (dist < shortestDist) {
             if ((y + x) % 2 === castlePos) {
@@ -369,6 +369,9 @@ var unitHelper = {
           }
         }
       }
+    }
+    if (!guardPosition) {
+      guardPosition = unitHelper.getRandomKarbonite(karbMap);
     }
     return guardPosition;
   },

@@ -36,7 +36,7 @@ var prophetHelper = {
         self.destination = unitHelper.reflect(self.me, self.getPassableMap(), self.me.id % 2 === 0);
       } else if (self.task === "guard_castle") {
         self.log("Adding guard position as destination!");
-        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
+        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map);
         self.log(self.destination);
       }
       distanceToDestination = unitHelper.sqDist(location, self.destination);
@@ -69,7 +69,7 @@ var prophetHelper = {
       // go to new guard position
       if (distanceToDestination === 0) {
         if ((self.me.x + self.me.y) % 2 !== (self.castle.x + self.castle.y) % 2) {
-          self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
+          self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map);
         } else {
           // self.log("At guard position now");
           return null; // stand in guard position
@@ -78,7 +78,7 @@ var prophetHelper = {
           self.log("Location to guard is occupied")
           if (self.waitTurn) self.waitTurn = 0;
           // If destination occupied, get new closest source
-          self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
+          self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map);
       }
     } else if (self.task === "attack_opponent") {
 
@@ -89,7 +89,7 @@ var prophetHelper = {
       if (distanceToDestination === 0) {
         self.task = "guard_castle";
         self.log("Adding guard position as destination!");
-        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
+        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map);
         self.log(self.destination);
       }
     }
