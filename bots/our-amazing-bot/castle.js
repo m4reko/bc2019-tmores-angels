@@ -198,7 +198,7 @@ var castleHelper = {
       self.spawnedClosestKarb = 0;
       self.spawnedClosestFuel = 0;
     }
-    if (!self.managedKarbonite || !self.managedFuel) {
+    if (!self.managedKarbonite && !self.managedFuel) {
       self.managedKarbonite = 0;
       self.managedFuel = 0;
     }

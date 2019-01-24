@@ -43,7 +43,7 @@ var preacherHelper = {
       if (self.target) {
         self.destination = self.target;
       } else {
-        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
+        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
       }
 
       self.task = "go_to_enemy";
@@ -74,7 +74,7 @@ var preacherHelper = {
     }
 
     // If at destination and no enemies nearby
-    let newGuardPosition = unitHelper.getCastleGuardPosition(self.castle, self.map);
+    let newGuardPosition = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
 
     if(location.x === self.destination.x && location.y === self.destination.y){
       if(self.task==="go_to_enemy"){
@@ -111,13 +111,13 @@ var preacherHelper = {
         self.log("Location to guard is occupied")
         if (self.waitTurn) self.waitTurn = 0;
         // If destination occupied, get new closest source
-        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
+        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
       }
     }
     self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
     let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
     if(nextDirection.x > 1 || nextDirection.y <-1 || nextDirection.y > 1 || nextDirection.x <-1){
-      self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
+      self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
       self.log("Just moving preacher: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
