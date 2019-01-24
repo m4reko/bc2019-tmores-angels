@@ -42,6 +42,7 @@ var structureHelper = {
     for(var x=-1;x<=1; x++){
       for(var y=-1;y<=1; y++){
         if (loc.x < 0 || loc.x >= fullMap.length || loc.y < 0 || loc.y >= fullMap.length) continue;
+        if(x==0 && y == 0) continue;
         let dir = {x:x, y:y};
         let testLocation = {x: (loc.x + dir.x), y: (loc.y-dir.y)};
         if(structureHelper.isPassable(testLocation, fullMap, robotMap)){

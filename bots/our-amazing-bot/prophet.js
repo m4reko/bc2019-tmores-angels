@@ -37,7 +37,7 @@ var prophetHelper = {
       }
       else if(self.task === "guard_castle"){
         self.log("Adding guard position as destination!");
-        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map, self.getVisibleRobotMap());
+        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
         self.log(self.destination);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
@@ -74,11 +74,11 @@ var prophetHelper = {
         self.log("At guard position now");
         return null; // stand in guard position
 
-      }else if(distanceToDestination<=2 && self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
+      }else if(distanceToDestination<=4 && self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
           self.log("Location to guard is occupied")
           if (self.waitTurn) self.waitTurn = 0;
           // If destination occupied, get new closest source
-          self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map, self.getVisibleRobotMap());
+          self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
           self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
     }else if(self.task === "attack_opponent"){
@@ -90,7 +90,7 @@ var prophetHelper = {
       if(distanceToDestination === 0){
         self.task = "guard_castle";
         self.log("Adding guard position as destination!");
-        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map, self.getVisibleRobotMap());
+        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
         self.log(self.destination);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       }
