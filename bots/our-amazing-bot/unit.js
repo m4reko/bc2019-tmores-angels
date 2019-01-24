@@ -52,6 +52,21 @@ var unitHelper = {
     {x:0, y:1},
   ],
 
+  directions__: [
+    {x:-1, y:0},
+    {x:-2, y:0},
+    {x:1, y:0},
+    {x:2, y:0},
+    {x:-1, y:1},
+    {x:1, y:1},
+    {x:0, y:-1},
+    {x:0, y:-2},
+    {x:0, y:1},
+    {x:0, y:2},
+    {x:1, y:-1},
+    {x:-1, y:-1}
+  ],
+
   // Gives squared distance
   sqDist : (start, end) => {
     return Math.pow(start.x - end.x, 2) + Math.pow(start.y - end.y, 2);
@@ -98,17 +113,16 @@ var unitHelper = {
     }
   },
 
-  getClosestAttackableOpponent : (me, robots) => {
-    var closestRobot = false;
-    var shortestDist = Infinity;
-    for (var i=0; i<robots.length; i++) {
-      let r = robots[i];
-      const dist = unitHelper.sqDist(r, me);
-      if (r.team !== me.team
+  getClosestAttackableOpponent: (me, robots) => {
+    let closestRobot = false;
+    let shortestDist = Infinity;
+    for (const robot of robots) {
+      let dist = unitHelper.sqDist(robot, me);
+      if (robot.team !== me.team
           && SPECS.UNITS[me.unit].ATTACK_RADIUS[0] <= dist
           && dist <= SPECS.UNITS[me.unit].ATTACK_RADIUS[1]) {
-          if (dist<shortestDist) {
-            closestRobot = r;
+          if (dist < shortestDist) {
+            closestRobot = robot;
             shortestDist = dist;
           }
       }
@@ -325,26 +339,33 @@ var unitHelper = {
     return resourceLocations;
   },
 
-  getCastleGuardPosition: (location, castle, fullMap, robotMap)=>{
+  getCastleGuardPosition: (location, castle, fullMap, robotMap) => {
     let guardPosition = {};
-    let dist = Infinity;
+    let shortestDist = Infinity;
+    let castlePos = (castle.x + castle.y) % 2;
 
-    for (var y = castle.y - 8; y < castle.y + 8; y++) {
-      for (var x = castle.x - 8; x < castle.x + 8; x++) {
-        if (fullMap[y] && fullMap[y][x] && robotMap[y][x]<=0){
-
-          if(x == castle.x && y == castle.y) continue;
-
-          if( unitHelper.sqDist(location, { x:x, y:y }) <= dist){
-
-            if( (castle.x % 2 == castle.y % 2) && (y % 2 == x % 2) ){
+    for (var y = location.y - 10; y < location.y + 10; y++) {
+      for (var x = location.x - 10; x < location.x + 10; x++) {
+        if (fullMap[y] && fullMap[y][x] && robotMap[y][x] === 0) {
+          if (x == castle.x && y == castle.y) continue;
+          let dist = unitHelper.sqDist(castle, {x: x, y: y});
+          if (dist < shortestDist) {
+            if ((y + x) % 2 === castlePos) {
               guardPosition = {x: x, y: y}; // Chess board pattern
-              dist = unitHelper.sqDist(location, {x:x, y:y});
-            }else if( (castle.x % 2 != castle.y % 2) && (y % 2 != x % 2) ){
-              guardPosition = {x: x, y: y}; // Chess board pattern
-              dist = unitHelper.sqDist(location, {x:x, y:y});
+              shortestDist = dist;
             }
-
+          }
+        }
+      }
+    }
+    if (!guardPosition) {
+      let longestDist = 0;
+      for (const direction of unitHelper.directions__) {
+        if (unitHelper.isPassable({x: location.x + direction.x, y: location.y + direction.y}, fullMap, robotMap)) {
+          let dist = unitHelper.sqDist(castle, {x: location.x + direction.x, y: location.y + direction.y});
+          if (dist > longestDist) {
+            guardPosition = {x: location.x + direction.x, y: location.y + direction.y};
+            longestDist = dist;
           }
         }
       }
