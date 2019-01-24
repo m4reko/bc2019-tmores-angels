@@ -128,11 +128,11 @@ var preacherHelper = {
       }
     }
     self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-    let nextDirection = unitHelper.getNextDirection(location, 1, self.distanceMap);
+    let nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
     if(nextDirection.x > 1 || nextDirection.y <-1 || nextDirection.y > 1 || nextDirection.x <-1){
       self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-      let nextDirection = unitHelper.getNextDirection(location, 2, self.vision, self.distanceMap);
+      let nextDirection = unitHelper.getNextDirection(location, 1, self.vision, self.distanceMap);
       self.log("Just moving preacher: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
       return self.move(nextDirection.x, nextDirection.y);
     }
