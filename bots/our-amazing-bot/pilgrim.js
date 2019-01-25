@@ -98,7 +98,7 @@ var pilgrimHelper = {
           if (self.stashTarget === null) {
             let distanceToCastle = unitHelper.sqDist(location, self.castle);
             // self.log("I see these churces: " + self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
-            target = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
+            target = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && (r.unit === SPECS.CHURCH || r.unit === SPECS.CASTLE)));
             // self.log("This is my closest church");
             if (!target) {
               if (self.karbonite >= 50 && self.fuel >= 200) {

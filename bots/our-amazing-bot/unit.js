@@ -252,7 +252,7 @@ var unitHelper = {
         y: location.y + newDirection.y
       };
       if (newLocation.x < 0 || newLocation.x >= map.length || newLocation.y < 0 || newLocation.y >= map.length) continue;
-      if (!map[newLocation.y][newLocation.x] || fuelMap[newLocation.y][newLocation.y] || karbMap[newLocation.y][newLocation.x] || robotMap[newLocation.y][newLocation.x] > 0) continue;
+      if (!map[newLocation.y][newLocation.x] || fuelMap[newLocation.y][newLocation.x] || karbMap[newLocation.y][newLocation.x] || robotMap[newLocation.y][newLocation.x] > 0) continue;
       let nearby = unitHelper.getNearbyResourceLocations(newLocation, karbMap, fuelMap, 1).length;
       if (nearby > mostResources) {
         bestLocation = newLocation;
