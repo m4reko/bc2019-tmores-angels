@@ -173,8 +173,8 @@ var castleHelper = {
         }).pop();
         self.managedFuel = self.resourcesManagedFuel.length;
         self.managedKarbonite = self.resourcesManagedKarbonite.length;
-        // self.log(self.resourcesManagedKarbonite);
-        // self.log(self.resourcesManagedFuel);
+        self.log(self.resourcesManagedKarbonite);
+        self.log(self.resourcesManagedFuel);
       }
     }
 
@@ -188,7 +188,9 @@ var castleHelper = {
 
     if (!self.closestKarb || !self.closestFuel) {
       self.closestKarb = structureHelper.getClosestResource({x: self.me.x, y: self.me.y}, self.karbonite_map);
+      self.log("My closest karbonite is here: " + self.closestKarb.x + ", " + self.closestKarb.y);
       self.closestFuel = structureHelper.getClosestResource({x: self.me.x, y: self.me.y}, self.fuel_map);
+      self.log("My closest fuel is here: " + self.closestFuel.x + ", " + self.closestFuel.y);
     }
 
     // Build pilgrims
@@ -262,6 +264,7 @@ var castleHelper = {
           self.signal(parseInt(pos.toString(), 10), 2);
         }
         self.log('Building a pilgrim at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+        self.log('The target is: ' + targetResource.x + ", " + targetResource.y);
         return self.buildUnit(SPECS.PILGRIM, direction.x, direction.y);
       } else {
         self.log("No open direction was found - cannot build");

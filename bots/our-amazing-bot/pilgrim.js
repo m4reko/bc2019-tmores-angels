@@ -108,7 +108,7 @@ var pilgrimHelper = {
                   if (target.x !== -1 && target.y !== -1) {
                     self.stashTarget = {x:target.x, y:target.y};
                     return self.buildUnit(SPECS.CHURCH, target.x - location.x, target.y - location.y);
-                  }else{
+                  } else {
                     target = false;
                   }
                 }
