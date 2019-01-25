@@ -130,6 +130,22 @@ var unitHelper = {
     return closestRobot;
   },
 
+  getClosestOpponent: (me, robots) => {
+    let closestRobot = false;
+    let shortestDist = Infinity;
+    for (const robot of robots) {
+      let dist = unitHelper.sqDist(robot, me);
+      if (robot.team !== me.team) {
+          if (dist < shortestDist) {
+            closestRobot = robot;
+            shortestDist = dist;
+          }
+      }
+    }
+    return closestRobot;
+  },
+
+
   // Gives the closest karbonite location not occupied by any robot (can only see within view of robot)
   getClosestUnoccupiedKarbonite : (loc, karbMap, robotMap) => {
     const mapLen = karbMap.length;
@@ -343,8 +359,8 @@ var unitHelper = {
     let guardPosition = {};
     let dist = Infinity;
 
-    for (let y = location.y - 100; y < location.y + 100; y++) {
-      for (let x = location.x - 100; x < location.x + 100; x++) {
+    for (let y = location.y - 15; y < location.y + 15; y++) {
+      for (let x = location.x - 15; x < location.x + 15; x++) {
         if (fullMap[y] && fullMap[y][x] && robotMap[y] && robotMap[y][x] <= 0) {
 
           if (x >= castle.x-1  && x <= castle.x+1 && y >= castle.y-1 && y <= castle.y+1 ) continue;
@@ -374,6 +390,7 @@ var unitHelper = {
   //Get next direction according to a distance map
   getNextDirection: (loc, range, vision, distMap, unitMap, backaway = false) => {
     let currentValue = 1000;
+    if(backaway) currentValue = 0;
     let currentLocations = [];
 
     // Test all positions in range and find the one closest to 0
@@ -383,7 +400,8 @@ var unitHelper = {
           if (typeof distMap === 'undefined' || typeof distMap[y] === 'undefined' || typeof distMap[y][x] === 'undefined' || distMap[y][x] === null || unitMap[y][x] > 0) continue;
           let dist = unitHelper.sqDist(loc, {x: x, y: y});
           if (dist > range || dist > vision) continue;
-          if (((backaway && distMap[y][x] > currentValue) || (!backaway && distMap[y][x] < currentValue)) && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {
+          let shouldMove = ((backaway && distMap[y][x] > currentValue) || (!backaway && distMap[y][x] < currentValue));
+          if ( shouldMove && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {
             currentLocations = [];
             currentLocations.push({x: x, y: y, dist: dist});
             currentValue = distMap[y][x];

@@ -24,7 +24,8 @@ var prophetHelper = {
     let distanceToDestination = Infinity;
     // let randomKarb = unitHelper.getRandomKarbonite(self.getKarboniteMap());
 
-    if (!self.lastDestination) self.lastDestination = null;
+    if (!self.lastDestination) self.lastDestination = {x:-1, y:-1};
+
     if (self.destination) {
       distanceToDestination = unitHelper.sqDist(location, self.destination);
     }
@@ -35,7 +36,7 @@ var prophetHelper = {
         self.log("Adding mirrored position as destination!");
         self.destination = unitHelper.reflect(self.me, self.getPassableMap(), self.me.id % 2 === 0);
       } else if (self.task === "guard_castle") {
-        self.log("Adding guard position as destination!");
+        self.log("Just woke up. Adding guard position as destination!");
         self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map, self.fuel_map);
         self.log(self.destination);
       }
@@ -43,23 +44,27 @@ var prophetHelper = {
     }
 
     // Find nearby robots
-    let nearbyRobots = self.getVisibleRobots().filter(r => r.team !== self.me.team);
-    let closestOpponent = unitHelper.getClosestAttackableOpponent(self.me, nearbyRobots);
+    let robotsInView = self.getVisibleRobots().filter(r => r.team !== self.me.team);
+    let robotsInRange = robotsInView.filter(r => unitHelper.sqDist(location, r) >= 16);
 
     // Attack if opponent nearby!
-    if (closestOpponent) {
-      self.log("Attack opponent!");
-      return self.attack(closestOpponent.x - location.x, closestOpponent.y - location.y);
-    } else {
-      // Walk towards enemies within view range
-      if(nearbyRobots.length > 0){
-        let previousDestination = self.destination;
-        self.destination = nearbyRobots[i];
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
-        let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
-        self.destination = previousDestination;
-        return self.move(nextDirection.x, nextDirection.y);
-      }
+    if (robotsInRange.length) {
+      let closestAttackableOpponent = unitHelper.getClosestAttackableOpponent(self.me, robotsInRange);
+      self.log("Attack closest attackable opponent!");
+      return self.attack(closestAttackableOpponent.x - location.x, closestAttackableOpponent.y - location.y);
+    } else if (robotsInView.length > 0) {
+        let closestOpponent = unitHelper.getClosestOpponent(self.me, robotsInView);
+
+        if(closestOpponent){
+          let previousDestination = { x: self.destination.x, y: self.destination.y};
+          self.destination = { x: closestOpponent.x, y: closestOpponent.y};
+          self.log(self.destination);
+          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+          let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap(), true);
+          self.destination = { x: previousDestination.x, y: previousDestination.y};
+          return self.move(nextDirection.x, nextDirection.y);
+        }
+
     }
 
     if (self.task === "guard_castle") {
@@ -74,7 +79,6 @@ var prophetHelper = {
         }
       } else if (distanceToDestination <= 4 && self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
           self.log("Location to guard is occupied")
-          if (self.waitTurn) self.waitTurn = 0;
           // If destination occupied, get new closest source
           self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map, self.fuel_map);
       }
@@ -93,17 +97,22 @@ var prophetHelper = {
     }
 
     // Walk towards destination
-    if (self.destination) {
-      if (self.destination !== self.lastDestination) {
+    if (Object.keys(self.destination).length) {
+      if (self.destination.y !== self.lastDestination.y && self.destination.x !== self.lastDestination.x) {
+        self.log(self.destination);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
-        self.lastDestination = self.destination;
+        self.lastDestination.x = self.destination.x;
+        self.lastDestination.y = self.destination.y;
       }
+
       if (self.distanceMap) {
         let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
         self.log("Moving Prophet to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
         if (self.distanceMap[location.y][location.x] !== self.distanceMap[location.y + nextDirection.y][location.x + nextDirection.x] && self.fuel > self.SF)
           return self.move(nextDirection.x, nextDirection.y);
       }
+    }else{
+      self.log("No destination coordinates");
     }
 
     return null;
