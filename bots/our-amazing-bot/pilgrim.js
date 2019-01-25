@@ -151,7 +151,7 @@ var pilgrimHelper = {
       // self.log("My destination is: " + self.destination.x + ", " + self.destination.y);
       // self.log("Trying to create distance map");
       if (self.destination.x !== self.lastDestination.x && self.destination.y !== self.lastDestination.y) {
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, enemies);
         self.lastDestination = self.destination;
       }
       let maxWalk = (self.fuel >= Math.pow(4, 2) ? 4 : 2);

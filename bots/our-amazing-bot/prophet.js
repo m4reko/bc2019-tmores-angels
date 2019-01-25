@@ -52,15 +52,13 @@ var prophetHelper = {
       return self.attack(closestOpponent.x - location.x, closestOpponent.y - location.y);
     } else {
       // Walk towards enemies within view range
-      for (var i = 0; i < nearbyRobots.length; i++) {
-        if (nearbyRobots[i].team != self.me.team) {
-          let previousDestination = self.destination;
-          self.destination = nearbyRobots[i];
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
-          let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
-          self.destination = previousDestination;
-          return self.move(nextDirection.x, nextDirection.y);
-        }
+      if(nearbyRobots.length > 0){
+        let previousDestination = self.destination;
+        self.destination = nearbyRobots[i];
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+        let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
+        self.destination = previousDestination;
+        return self.move(nextDirection.x, nextDirection.y);
       }
     }
 
@@ -97,7 +95,7 @@ var prophetHelper = {
     // Walk towards destination
     if (self.destination) {
       if (self.destination !== self.lastDestination) {
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
         self.lastDestination = self.destination;
       }
       if (self.distanceMap) {

@@ -183,7 +183,7 @@ var unitHelper = {
 
   // createDistanceMap creates a distancemap according to the destination
   // should be stored and used with getNextDirection method
-  createDistanceMap: (dest, fullMap, robotMap, danger = [], range = 2) => {
+  createDistanceMap: (dest, fullMap, danger = [], range = 2) => {
     let distMap = []; // Init distMap
     for (let y = 0; y < fullMap.length; y++) {
       distMap[y] = [];
@@ -211,7 +211,7 @@ var unitHelper = {
 
           if (new_location.y >= 0 && new_location.y < fullMap.length && new_location.x >= 0 && new_location.x < fullMap.length) {
             if (typeof distMap[new_location.y] !== 'undefined' && typeof distMap[new_location.y][new_location.x] !== 'undefined' && distMap[new_location.y][new_location.x] === null) {
-              if (!unitHelper.isPassable(new_location, fullMap, robotMap)) {
+              if (!fullMap[new_location.y][new_location.x]) {
                 distMap[new_location.y][new_location.x] = -2;
                 if (current_location.z < range - 1) {
                   new_location.z = 1;
