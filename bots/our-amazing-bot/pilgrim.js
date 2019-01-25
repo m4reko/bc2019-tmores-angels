@@ -62,7 +62,7 @@ var pilgrimHelper = {
       self.destination = self.targetarea;
     }
 
-    if (!self.lastDestination) self.lastDestination = null;
+    if (!self.lastDestination) self.lastDestination = {x: -1, y: -1};
     if (!self.stashTarget) self.stashTarget = null;
 
     let distanceToDestination = Infinity;
@@ -146,22 +146,25 @@ var pilgrimHelper = {
       }
     }
 
-    if (self.destination) {
+    if (self.destination && Object.keys(self.destination).length) {
       // self.log("My task is: " + self.task);
       // self.log("My destination is: " + self.destination.x + ", " + self.destination.y);
       // self.log("Trying to create distance map");
-      if (self.destination !== self.lastDestination) {
+      if (self.destination.x !== self.lastDestination.x && self.destination.y !== self.lastDestination.y) {
         self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, enemies);
         self.lastDestination = self.destination;
       }
       let maxWalk = (self.fuel >= Math.pow(4, 2) ? 4 : 2);
       let nextDirection = unitHelper.getNextDirection(location, maxWalk, self.vision, self.distanceMap, self.getVisibleRobotMap());
-
-      // self.log("Moving pilgrim to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
-      // // self.log("Passable: " + self.map[location.y + nextDirection.y][location.x + nextDirection.x]);
-      // // self.log("Robots: " + self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]);
-      if (self.distanceMap[location.y][location.x] !== self.distanceMap[location.y + nextDirection.y][location.x + nextDirection.x] && self.fuel > self.SF)
-        return self.move(nextDirection.x, nextDirection.y);
+      if (nextDirection) {
+        // self.log("Moving pilgrim to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
+        // // self.log("Passable: " + self.map[location.y + nextDirection.y][location.x + nextDirection.x]);
+        // // self.log("Robots: " + self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]);
+        if (self.distanceMap[location.y][location.x] !== self.distanceMap[location.y + nextDirection.y][location.x + nextDirection.x] && self.fuel > self.SF)
+          return self.move(nextDirection.x, nextDirection.y);
+      } else {
+        self.log("No space to move to");
+      }
     }
 
     return null;

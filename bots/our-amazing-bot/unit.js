@@ -359,26 +359,11 @@ var unitHelper = {
         }
       }
     }
-    if (!guardPosition) {
-      let longestDist = 0;
-      for (const direction of unitHelper.directions__) {
-        if (unitHelper.isPassable({x: location.x + direction.x, y: location.y + direction.y}, fullMap, robotMap)) {
-          let dist = unitHelper.sqDist(castle, {x: location.x + direction.x, y: location.y + direction.y});
-          if (dist > longestDist) {
-            guardPosition = {x: location.x + direction.x, y: location.y + direction.y};
-            longestDist = dist;
-          }
-        }
-      }
-    }
-    if (!guardPosition) {
-      guardPosition = unitHelper.getRandomKarbonite(karbMap);
-    }
     return guardPosition;
   },
 
   //Get next direction according to a distance map
-  getNextDirection: (loc, range, vision, distMap, unitMap) => {
+  getNextDirection: (loc, range, vision, distMap, unitMap, backaway = false) => {
     let currentValue = 1000;
     let currentLocations = [];
 
@@ -389,7 +374,7 @@ var unitHelper = {
           if (typeof distMap === 'undefined' || typeof distMap[y] === 'undefined' || typeof distMap[y][x] === 'undefined' || distMap[y][x] === null || unitMap[y][x] > 0) continue;
           let dist = unitHelper.sqDist(loc, {x: x, y: y});
           if (dist > range || dist > vision) continue;
-          if (distMap[y][x] < currentValue && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {
+          if (((backaway && distMap[y][x] > currentValue) || (!backaway && distMap[y][x] < currentValue)) && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {
             currentLocations = [];
             currentLocations.push({x: x, y: y, dist: dist});
             currentValue = distMap[y][x];
@@ -403,6 +388,7 @@ var unitHelper = {
       return b.dist - a.dist;
     });
     let currentLocation = currentLocations.pop();
+    if (!currentLocation) return false;
     return {y: currentLocation.y - loc.y, x: currentLocation.x - loc.x};
   },
 

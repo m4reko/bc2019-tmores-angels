@@ -309,6 +309,7 @@ var castleHelper = {
       let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
 
       if (randomDirection) {
+        self.spawnedProphets++;
         self.log('Building a prophet at ' + (self.me.x + randomDirection.x) + ',' + (self.me.y + randomDirection.y));
         return self.buildUnit(SPECS.PROPHET, randomDirection.x, randomDirection.y);
       } else {

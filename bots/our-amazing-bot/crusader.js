@@ -86,7 +86,7 @@ var crusaderHelper = {
           self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, 3);
           let nextDirection = unitHelper.getNextDirection(location, 9, self.vision, self.distanceMap, self.getVisibleRobotMap());
           self.destination = previousDestination;
-          return self.move(nextDirection.x, nextDirection.y);
+          if (nextDirection) return self.move(nextDirection.x, nextDirection.y);
         }
       }
     }
@@ -122,7 +122,11 @@ var crusaderHelper = {
       self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, 3);
       let nextDirection = unitHelper.getNextDirection(location, 9, self.vision, self.distanceMap, self.getVisibleRobotMap());
       self.log("Moving crusader to: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
-      return self.move(nextDirection.x, nextDirection.y);
+      if (nextDirection) {
+        return self.move(nextDirection.x, nextDirection.y);
+      } else {
+        self.log("No space to move to");
+      }
     }
   }
 };
