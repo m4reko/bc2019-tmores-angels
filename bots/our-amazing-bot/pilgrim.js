@@ -63,7 +63,7 @@ var pilgrimHelper = {
     }
 
     if (!self.lastDestination) self.lastDestination = {x: -1, y: -1};
-    if (!self.stashTarget) self.stashTarget = null;
+    //if (!self.stashTarget) self.stashTarget = null;
 
     let distanceToDestination = Infinity;
 
@@ -84,6 +84,13 @@ var pilgrimHelper = {
           self.me.karbonite,
           self.me.fuel
         );
+      } else {
+        let target = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
+        if(target){
+          if(unitHelper.sqDist(location, target) < unitHelper.sqDist(location, self.destination)){
+            self.destination = {x: target.x, y: target.y};
+          }
+        }
       }
     }
 
@@ -95,34 +102,38 @@ var pilgrimHelper = {
         // If at destination
         if (self.me.karbonite > 18 || self.me.fuel > 90) {
           let target = {x: 0, y: 0};
-          if (self.stashTarget === null) {
-            let distanceToCastle = unitHelper.sqDist(location, self.castle);
-            self.log("I see these churces: " + self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
-            target = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
-            self.log("This is my closest church " + target);
-            if (!target) {
-              if (self.karbonite >= 50 && self.fuel >= 200) {
-                if (distanceToCastle > 25) {
-                  target = unitHelper.getChurchBuildPosition(location, self.map, self.fuel_map, self.karbonite_map, self.getVisibleRobotMap());
-                  self.log("I'm trying to build here: " + target.x + ", " + target.y);
-                  if (target.x !== -1 && target.y !== -1) {
-                    self.stashTarget = {x:target.x, y:target.y};
-                    return self.buildUnit(SPECS.CHURCH, target.x - location.x, target.y - location.y);
-                  } else {
-                    target = false;
-                  }
+          // if (self.stashTarget === null) {
+          let distanceToCastle = unitHelper.sqDist(location, self.castle);
+          self.log("I see these churces: " + self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
+          target = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
+          self.log("This is my closest church " + target);
+          if (!target) {
+            if (self.karbonite >= 50 && self.fuel >= 200) {
+              if (distanceToCastle > 25) {
+                target = unitHelper.getChurchBuildPosition(location, self.map, self.fuel_map, self.karbonite_map, self.getVisibleRobotMap());
+                self.log("I'm trying to build here: " + target.x + ", " + target.y);
+                if (target.x !== -1 && target.y !== -1) {
+                  // self.stashTarget = {x:target.x, y:target.y};
+                  return self.buildUnit(SPECS.CHURCH, target.x - location.x, target.y - location.y);
+                } else {
+                  target = false;
                 }
               }
             }
-            if (!target) target = {x:self.castle.x, y:self.castle.y};
-            let distanceToChurch = unitHelper.sqDist(location, target);
-            if (distanceToCastle <= distanceToChurch) {
-              target = {x:self.castle.x, y:self.castle.y};
-            }
-            self.stashTarget = {x:target.x, y:target.y};
-          } else {
-            target = {x:self.stashTarget.x, y:self.stashTarget.y};
           }
+
+          if (!target) target = {x:self.castle.x, y:self.castle.y};
+          let distanceToChurch = unitHelper.sqDist(location, target);
+
+          if (distanceToCastle <= distanceToChurch) {
+            target = {x:self.castle.x, y:self.castle.y};
+          }
+          // self.stashTarget = {x:target.x, y:target.y};
+          // } else {
+          //
+          //   target = {x:self.stashTarget.x, y:self.stashTarget.y};
+          //
+          // }
           if (unitHelper.sqDist(location, target) > 2) {
             self.task = tasks[1]; // stash
             self.destination = {x:target.x, y:target.y};

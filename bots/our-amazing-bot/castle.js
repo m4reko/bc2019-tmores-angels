@@ -127,9 +127,9 @@ var castleHelper = {
               }
               let dist = [];
               dist.push(structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[0][0], y: self.castleLocations[0][1]}));
-              dist.push(structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[1][0], y: self.castleLocations[0][1]}));
+              dist.push(structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[1][0], y: self.castleLocations[1][1]}));
               dist.push(Infinity);
-              if (self.castleAmount === 3) dist[2] = structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[2][0], y: self.castleLocations[0][1]});
+              if (self.castleAmount === 3) dist[2] = structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[2][0], y: self.castleLocations[2][1]});
               let min = Math.min(dist[0], dist[1], dist[2]);
               for (let i = 0; i < 3; i++) {
                 if (dist[i] === min && self.castleNumber === i + 1) {
@@ -152,9 +152,9 @@ var castleHelper = {
               }
               let dist = [];
               dist.push(structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[0][0], y: self.castleLocations[0][1]}));
-              dist.push(structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[1][0], y: self.castleLocations[0][1]}));
+              dist.push(structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[1][0], y: self.castleLocations[1][1]}));
               dist.push(Infinity);
-              if (self.castleAmount === 3) dist[2] = structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[2][0], y: self.castleLocations[0][1]});
+              if (self.castleAmount === 3) dist[2] = structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[2][0], y: self.castleLocations[2][1]});
               let min = Math.min(dist[0], dist[1], dist[2]);
               for (let i = 0; i < 3; i++) {
                 if (dist[i] === min && self.castleNumber === i + 1) {
