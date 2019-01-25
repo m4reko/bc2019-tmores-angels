@@ -359,8 +359,8 @@ var unitHelper = {
     let guardPosition = {};
     let dist = Infinity;
 
-    for (let y = location.y - 15; y < location.y + 15; y++) {
-      for (let x = location.x - 15; x < location.x + 15; x++) {
+    for (let y = location.y - 20; y < location.y + 20; y++) {
+      for (let x = location.x - 20; x < location.x + 20; x++) {
         if (fullMap[y] && fullMap[y][x] && robotMap[y] && robotMap[y][x] <= 0) {
 
           if (x >= castle.x-1  && x <= castle.x+1 && y >= castle.y-1 && y <= castle.y+1 ) continue;
