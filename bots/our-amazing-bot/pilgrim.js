@@ -59,7 +59,8 @@ var pilgrimHelper = {
     if (initTarget !== null) {
       //self.targetarea = unitHelper.posTo12Bit(self.map, initTarget);
       self.targetarea = initTarget;
-      self.destination = self.targetarea;
+      self.destination = {x: self.targetarea.x, y: self.targetarea.y};
+      self.resourceDistanceMap = unitHelper.createDistanceMap(self.targetarea, self.map);
     }
 
     if (!self.lastDestination) self.lastDestination = {x: -1, y: -1};
@@ -145,13 +146,14 @@ var pilgrimHelper = {
           return self.mine();
         }
       } else if (distanceToDestination <= 2) {
-        if (!unitHelper.isPassable({x: self.destination.x, y: self.destination.y}, self.map, self.getVisibleRobotMap())) {
+        let visibleRobotMap = self.getVisibleRobotMap();
+        if (!unitHelper.isPassable({x: self.destination.x, y: self.destination.y}, self.map, visibleRobotMap)) {
           if (self.waitTurn < 2) {
             self.waitTurn++;
             return null;
           }
         }
-        if (self.getVisibleRobotMap()[self.destination.y][self.destination.x]) {
+        if (visibleRobotMap[self.destination.y][self.destination.x]) {
           if (self.waitTurn) self.waitTurn = 0;
           // If destination occupied, get new closest source
           // self.destination = unitHelper.getClosestUnoccupiedKarbonite(location, self.getKarboniteMap(), self.getVisibleRobotMap());
@@ -166,20 +168,27 @@ var pilgrimHelper = {
       // self.log("Trying to create distance map");
       if (!(self.destination.x === self.lastDestination.x && self.destination.y === self.lastDestination.y)) {
         // self.log("Created distance map");
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap(), enemies);
+        if (self.destination.x === self.targetarea.x && self.destination.y === self.targetarea.y) {
+          self.distanceMap = self.resourceDistanceMap;
+        } else {
+          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, [], enemies);
+        }
         self.lastDestination = {x: self.destination.x, y: self.destination.y};
       }
 
-      for(let y=location.y-1; y<=location.y+1; y++){
-        for(let x=location.x-1; x<=location.x+1; x++){
-          if(y>=0 && x>=0 && y<self.distanceMap.length && x<self.distanceMap.length){
-            // self.log("My neighbour at " + x + ", " + y + " is " + self.distanceMap[y][x]);
-          }
-        }
-      }
+
+      // for(let y=location.y-1; y<=location.y+1; y++){
+      //   for(let x=location.x-1; x<=location.x+1; x++){
+      //     if(y>=0 && x>=0 && y<self.distanceMap.length && x<self.distanceMap.length){
+      //       // self.log("My neighbour at " + x + ", " + y + " is " + self.distanceMap[y][x]);
+      //     }
+      //   }
+      // }
 
       let maxWalk = (self.fuel >= Math.pow(4, 2) ? 4 : 2);
-      let nextDirection = unitHelper.getNextDirection(location, maxWalk, self.vision, self.distanceMap, self.getVisibleRobotMap());
+      let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.distanceMap, self.getVisibleRobotMap(), location);
+      let nextDirection = unitHelper.getNextDirection(location, maxWalk, self.vision, populatedDistanceMap);
+
       if (nextDirection) {
         // self.log("Moving pilgrim to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
         // // self.log("Passable: " + self.map[location.y + nextDirection.y][location.x + nextDirection.x]);

@@ -81,7 +81,7 @@ var unitHelper = {
         return false;
     } else if (y >= mapLen || y < 0) {
         return false;
-    } else if (robotMap[y][x] > 0 || !fullMap[y][x]) {
+    } else if ((robotMap[y] && robotMap[y][x] > 0) || !fullMap[y][x]) {
         return false;
     } else {
         return true;
@@ -199,7 +199,7 @@ var unitHelper = {
 
   // createDistanceMap creates a distancemap according to the destination
   // should be stored and used with getNextDirection method
-  createDistanceMap: (dest, fullMap, robotMap, danger = [], range = 2) => {
+  createDistanceMap: (dest, fullMap, robotMap = [], danger = [], range = 2) => {
     let distMap = []; // Init distMap
     for (let y = 0; y < fullMap.length; y++) {
       distMap[y] = [];
@@ -257,6 +257,20 @@ var unitHelper = {
       }
     }
     return distMap;
+  },
+
+  addUnitsToDistanceMap: (distanceMap, unitMap, location) => {
+    let resultMap = [];
+    for(let y = 0; y < distanceMap.length; y++){
+      resultMap.push([]);
+      for(let x = 0; x < distanceMap.length; x++){
+        if(location.x === x && location.y === y){
+          resultMap[y][x] = distanceMap[y][x];
+        }
+        resultMap[y][x] = unitMap[y][x] > 0 ? -2 : distanceMap[y][x];
+      }
+    }
+    return resultMap;
   },
 
   getChurchBuildPosition: (location, map, fuelMap, karbMap, robotMap) => {
@@ -359,8 +373,8 @@ var unitHelper = {
     let guardPosition = {};
     let dist = Infinity;
 
-    for (let y = location.y - 20; y < location.y + 20; y++) {
-      for (let x = location.x - 20; x < location.x + 20; x++) {
+    for (let y = location.y - 16; y < location.y + 16; y++) {
+      for (let x = location.x - 16; x < location.x + 16; x++) {
         if (fullMap[y] && fullMap[y][x] && robotMap[y] && robotMap[y][x] <= 0) {
 
           if (x >= castle.x-1  && x <= castle.x+1 && y >= castle.y-1 && y <= castle.y+1 ) continue;
@@ -388,7 +402,7 @@ var unitHelper = {
   },
 
   //Get next direction according to a distance map
-  getNextDirection: (loc, range, vision, distMap, unitMap, backaway = false) => {
+  getNextDirection: (loc, range, vision, distMap, unitMap = [], backaway = false) => {
     let currentValue = 1000;
     if(backaway) currentValue = 0;
     let currentLocations = [];
@@ -397,7 +411,7 @@ var unitHelper = {
     for (var y = loc.y - range; y <= loc.y + range; y++) {
       for (var x = loc.x - range; x <= loc.x + range; x++) {
         if (y < distMap.length && x < distMap.length && x >= 0 && y >= 0) {
-          if (typeof distMap === 'undefined' || typeof distMap[y] === 'undefined' || typeof distMap[y][x] === 'undefined' || distMap[y][x] === null || unitMap[y][x] > 0) continue;
+          if (typeof distMap === 'undefined' || typeof distMap[y] === 'undefined' || typeof distMap[y][x] === 'undefined' || distMap[y][x] === null || (unitMap[y] && unitMap[y][x] > 0)) continue;
           let dist = unitHelper.sqDist(loc, {x: x, y: y});
           if (dist > range || dist > vision) continue;
           let shouldMove = ((backaway && distMap[y][x] > currentValue) || (!backaway && distMap[y][x] < currentValue));
