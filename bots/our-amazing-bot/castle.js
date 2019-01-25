@@ -121,7 +121,6 @@ var castleHelper = {
               }
               if (dangerous) continue;
               if (self.castleAmount === 1) {
-                self.managedKarbonite++;
                 let dist = structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[0][0], y: self.castleLocations[0][1]});
                 self.resourcesManagedKarbonite.push({x: x, y: y, dist: dist});
                 continue;
@@ -134,7 +133,6 @@ var castleHelper = {
               let min = Math.min(dist[0], dist[1], dist[2]);
               for (let i = 0; i < 3; i++) {
                 if (dist[i] === min && self.castleNumber === i + 1) {
-                  self.managedKarbonite++;
                   self.resourcesManagedKarbonite.push({x: x, y: y, dist: min});
                   break;
                 }
@@ -148,7 +146,6 @@ var castleHelper = {
               }
               if (dangerous) continue;
               if (self.castleAmount === 1) {
-                self.managedFuel++;
                 let dist = structureHelper.nav.sqDist({x: x, y: y}, {x: self.castleLocations[0][0], y: self.castleLocations[0][1]});
                 self.resourcesManagedFuel.push({x: x, y: y, dist: dist});
                 continue;
@@ -161,7 +158,6 @@ var castleHelper = {
               let min = Math.min(dist[0], dist[1], dist[2]);
               for (let i = 0; i < 3; i++) {
                 if (dist[i] === min && self.castleNumber === i + 1) {
-                  self.managedFuel++;
                   self.resourcesManagedFuel.push({x: x, y: y, dist: min});
                   break;
                 }
@@ -169,14 +165,14 @@ var castleHelper = {
             }
           }
         }
-        self.managedFuel--;
         self.resourcesManagedFuel.sort((a, b) => {
           return b.dist - a.dist;
         }).pop();
-        self.managedKarbonite--;
         self.resourcesManagedKarbonite.sort((a, b) => {
           return b.dist - a.dist;
         }).pop();
+        self.managedFuel = self.resourcesManagedFuel.length;
+        self.managedKarbonite = self.resourcesManagedKarbonite.length;
         // self.log(self.resourcesManagedKarbonite);
         // self.log(self.resourcesManagedFuel);
       }
