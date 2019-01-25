@@ -193,8 +193,7 @@ var pilgrimHelper = {
         // self.log("Moving pilgrim to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
         // // self.log("Passable: " + self.map[location.y + nextDirection.y][location.x + nextDirection.x]);
         // // self.log("Robots: " + self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]);
-        if (self.fuel > self.SF)
-          return self.move(nextDirection.x, nextDirection.y);
+        if (self.fuel > self.SF) return self.move(nextDirection.x, nextDirection.y);
       } else {
         // self.log("No space to move to");
       }

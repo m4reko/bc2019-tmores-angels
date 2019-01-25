@@ -20,13 +20,14 @@ var churchHelper = {
     const allies = self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.PROPHET);
     const enemies = self.getVisibleRobots().filter(r => r.team !== self.me.team);
 
-    if(self.step===1) self.spawnedProphets = 0;
+    if (self.step === 1) self.spawnedProphets = 0;
+    if (self.step === 1) self.spawnDefense = 0;
 
     if(!enemies.length){
-      self.spawnedProphets = 0;
+      self.spawnDefense = 0;
     }
 
-    if (enemies.length > 0 && self.spawnedProphets < 10) {
+    if (enemies.length > 0 && self.spawnDefense < 7) {
       let shortestDist = Infinity;
       let closestEnemy = enemies[0];
 
@@ -42,18 +43,19 @@ var churchHelper = {
 
       if (direction) {
         self.log('Church building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
-        self.spawnedProphets++;
+        self.spawnDefense++;
         return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
       } else {
         self.log("No direction was found - cannot build");
       }
-    } else if ((self.karbonite >= 25 + self.SK && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 15) / 15))) || (self.karbonite > 250 && self.fuel > 500) || self.turn > 700) {
+    } else if ((self.karbonite >= 25 + self.SK && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 15) / 15 + 1))) || (self.karbonite > 250 && self.fuel > 500) || self.step > 700) {
 
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
       let direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
 
       if (direction) {
         self.log('Church building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+        self.spawnedProphets++;
         return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
       } else {
         self.log("No random direction was found - cannot build");

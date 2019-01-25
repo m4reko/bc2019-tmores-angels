@@ -371,29 +371,22 @@ var unitHelper = {
 
   getCastleGuardPosition: (location, castle, fullMap, robotMap, karbMap, fuelMap) => {
     let guardPosition = {};
-    let dist = Infinity;
+    let shortestDist = Infinity;
+    let distFromCastle = unitHelper.sqDist(location, castle);
 
-    for (let y = location.y - 16; y < location.y + 16; y++) {
-      for (let x = location.x - 16; x < location.x + 16; x++) {
+    for (let y = location.y - 8; y < location.y + 8; y++) {
+      for (let x = location.x - 8; x < location.x + 8; x++) {
         if (fullMap[y] && fullMap[y][x] && robotMap[y] && robotMap[y][x] <= 0) {
 
-          if (x >= castle.x-1  && x <= castle.x+1 && y >= castle.y-1 && y <= castle.y+1 ) continue;
+          if (x >= castle.x - 1  && x <= castle.x + 1 && y >= castle.y - 1 && y <= castle.y + 1) continue;
           if (karbMap[y][x] || fuelMap[y][x]) continue;
 
-          if( unitHelper.sqDist(location, { x:x, y:y }) <= dist){
-
-             if( (castle.x % 2 == castle.y % 2) && (y % 2 == x % 2) ){
-
-               guardPosition = {x: x, y: y}; // Chess board pattern
-               dist = unitHelper.sqDist(location, {x:x, y:y});
-
-             }else if( (castle.x % 2 != castle.y % 2) && (y % 2 != x % 2) ){
-
-               guardPosition = {x: x, y: y}; // Chess board pattern
-               dist = unitHelper.sqDist(location, {x:x, y:y});
-
-             }
-
+          let dist = unitHelper.sqDist(location, { x:x, y:y });
+          if (dist <= shortestDist) {
+            if ((castle.x + castle.y) % 2 === (x + y) % 2) {
+              guardPosition = {x: x, y: y}; // Chess board pattern
+              shortestDist = dist;
+            }
           }
         }
       }
