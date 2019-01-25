@@ -183,7 +183,7 @@ var unitHelper = {
 
   // createDistanceMap creates a distancemap according to the destination
   // should be stored and used with getNextDirection method
-  createDistanceMap: (dest, fullMap, danger = [], range = 2) => {
+  createDistanceMap: (dest, fullMap, robotMap, danger = [], range = 2) => {
     let distMap = []; // Init distMap
     for (let y = 0; y < fullMap.length; y++) {
       distMap[y] = [];
@@ -211,7 +211,7 @@ var unitHelper = {
 
           if (new_location.y >= 0 && new_location.y < fullMap.length && new_location.x >= 0 && new_location.x < fullMap.length) {
             if (typeof distMap[new_location.y] !== 'undefined' && typeof distMap[new_location.y][new_location.x] !== 'undefined' && distMap[new_location.y][new_location.x] === null) {
-              if (!fullMap[new_location.y][new_location.x]) {
+              if (!unitHelper.isPassable(new_location, fullMap, robotMap)) {
                 distMap[new_location.y][new_location.x] = -2;
                 if (current_location.z < range - 1) {
                   new_location.z = 1;
@@ -341,20 +341,29 @@ var unitHelper = {
 
   getCastleGuardPosition: (location, castle, fullMap, robotMap, karbMap, fuelMap) => {
     let guardPosition = {};
-    let shortestDist = Infinity;
-    let castlePos = (castle.x + castle.y) % 2;
+    let dist = Infinity;
 
     for (let y = location.y - 10; y < location.y + 10; y++) {
       for (let x = location.x - 10; x < location.x + 10; x++) {
-        if (fullMap[y] && fullMap[y][x] && robotMap[y] && robotMap[y][x] === 0) {
+        if (fullMap[y] && fullMap[y][x] && robotMap[y] && robotMap[y][x] <= 0) {
+
           if (x === castle.x && y === castle.y) continue;
           if (karbMap[y][x] || fuelMap[y][x]) continue;
-          let dist = unitHelper.sqDist(castle, {x: x, y: y});
-          if (dist < shortestDist) {
-            if ((y + x) % 2 === castlePos) {
-              guardPosition = {x: x, y: y}; // Chess board pattern
-              shortestDist = dist;
-            }
+
+          if( unitHelper.sqDist(location, { x:x, y:y }) <= dist){
+
+             if( (castle.x % 2 == castle.y % 2) && (y % 2 == x % 2) ){
+
+               guardPosition = {x: x, y: y}; // Chess board pattern
+               dist = unitHelper.sqDist(location, {x:x, y:y});
+
+             }else if( (castle.x % 2 != castle.y % 2) && (y % 2 != x % 2) ){
+
+               guardPosition = {x: x, y: y}; // Chess board pattern
+               dist = unitHelper.sqDist(location, {x:x, y:y});
+
+             }
+
           }
         }
       }

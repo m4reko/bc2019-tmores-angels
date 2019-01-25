@@ -303,7 +303,7 @@ var castleHelper = {
     //   }
     // }
 
-    if (self.karbonite >= 25 + self.SK && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 50) / 50 + 1)) && self.spawnedProphets < 10 && self.spawnedKarbonite > 0 && self.spawnedFuel > 0) {
+    if (self.karbonite >= 25 + self.SK && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 50) / 50 + 1)) && self.spawnedProphets < 25 && self.spawnedKarbonite > 0 && self.spawnedFuel > 0) {
       let location = {x: self.me.x, y: self.me.y};
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
       let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];

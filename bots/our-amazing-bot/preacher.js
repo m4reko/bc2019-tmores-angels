@@ -51,7 +51,7 @@ var preacherHelper = {
       self.log(location);
       self.log(self.destination);
       self.log("next direction");
-      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
       if (nextDirection) return self.move(nextDirection.x, nextDirection.y);
     }
@@ -68,7 +68,7 @@ var preacherHelper = {
       self.log("walking towards enemy")
       self.task = "go_to_enemy";
       self.destination = enemies[0];
-      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
       if (nextDirection) return self.move(nextDirection.x, nextDirection.y);
     }
@@ -84,7 +84,7 @@ var preacherHelper = {
         self.log("going to guard castle instead");
         self.log(self.destination);
         self.log("castle position: (" + self.castle.x + ", " + self.castle.y + ")");
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
         let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
         if (nextDirection) {
           self.log("Moving preacher towards castle: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
@@ -117,7 +117,7 @@ var preacherHelper = {
     }
 
     if (self.destination) {
-      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
       let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
       self.log("Just moving preacher one step closer to: (" + (self.destination.x) + ", " + (self.destination.y) + ")");
       if (nextDirection) {

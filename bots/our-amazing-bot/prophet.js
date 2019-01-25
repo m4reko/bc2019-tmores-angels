@@ -56,7 +56,7 @@ var prophetHelper = {
         if (nearbyRobots[i].team != self.me.team) {
           let previousDestination = self.destination;
           self.destination = nearbyRobots[i];
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
           let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, self.distanceMap, self.getVisibleRobotMap());
           self.destination = previousDestination;
           return self.move(nextDirection.x, nextDirection.y);
@@ -97,7 +97,7 @@ var prophetHelper = {
     // Walk towards destination
     if (self.destination) {
       if (self.destination !== self.lastDestination) {
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map, self.getVisibleRobotMap());
         self.lastDestination = self.destination;
       }
       if (self.distanceMap) {

@@ -20,7 +20,7 @@ var churchHelper = {
 
     if(!self.spawnedProphets) self.spawnedProphets = 0;
 
-    if (self.karbonite >= 30 + self.SK && self.fuel >= 50 + self.SF && allies.length < 10) {
+    if (self.karbonite >= 30 + self.SK && self.fuel >= 50 + self.SF && allies.length < 25) {
       let location = {x: self.me.x, y: self.me.y};
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
       let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
