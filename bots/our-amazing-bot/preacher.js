@@ -26,7 +26,7 @@ var preacherHelper = {
           let signal = self.castle.signal;
           self.log("I recieved a signal");
           self.log("signal: " + signal);
-          if (signal.length) {
+          if (signal) {
             initTarget = {x: signal % self.map.length, y: (signal - signal % self.map.length) / self.map.length};
             self.log("I'm going to " + initTarget.x + ", " + initTarget.y);
           }
@@ -43,7 +43,7 @@ var preacherHelper = {
       if (self.target) {
         self.destination = self.target;
       } else {
-        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
+        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map, self.fuel_map);
       }
 
       self.task = "go_to_enemy";
@@ -68,7 +68,7 @@ var preacherHelper = {
     }
 
     // If at destination and no enemies nearby
-    let newGuardPosition = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
+    let newGuardPosition = unitHelper.getCastleGuardPosition(self.castle, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map, self.fuel_map);
 
     if (location.x === self.destination.x && location.y === self.destination.y) {
       if (self.task==="go_to_enemy") {
@@ -101,7 +101,7 @@ var preacherHelper = {
         self.log("Location to guard is occupied")
         if (self.waitTurn) self.waitTurn = 0;
         // If destination occupied, get new closest source
-        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, self.getVisibleRobotMap());
+        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map, self.fuel_map);
       }
     }
 
