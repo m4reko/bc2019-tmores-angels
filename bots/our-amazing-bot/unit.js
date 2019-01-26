@@ -374,8 +374,8 @@ var unitHelper = {
     let shortestDist = Infinity;
     let distFromCastle = unitHelper.sqDist(location, castle);
 
-    for (let y = location.y - 8; y < location.y + 8; y++) {
-      for (let x = location.x - 8; x < location.x + 8; x++) {
+    for (let y = location.y - 10; y < location.y + 10; y++) {
+      for (let x = location.x - 10; x < location.x + 10; x++) {
         if (fullMap[y] && fullMap[y][x] && robotMap[y] && robotMap[y][x] <= 0) {
 
           if (x >= castle.x - 1  && x <= castle.x + 1 && y >= castle.y - 1 && y <= castle.y + 1) continue;
