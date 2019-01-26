@@ -381,7 +381,7 @@ var unitHelper = {
           if (x >= castle.x - 1  && x <= castle.x + 1 && y >= castle.y - 1 && y <= castle.y + 1) continue;
           if (karbMap[y][x] || fuelMap[y][x]) continue;
 
-          let dist = unitHelper.sqDist(location, { x:x, y:y });
+          let dist = unitHelper.sqDist(location, {x: x, y: y});
           if (dist <= shortestDist) {
             if ((castle.x + castle.y) % 2 === (x + y) % 2) {
               guardPosition = {x: x, y: y}; // Chess board pattern

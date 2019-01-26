@@ -27,6 +27,7 @@ var prophetHelper = {
     // let randomKarb = unitHelper.getRandomKarbonite(self.getKarboniteMap());
 
     if (!self.lastDestination) self.lastDestination = {x:-1, y:-1};
+    if (lowtime) self.destination = {x: location.x, y: location.y};
 
     if (self.destination) {
       distanceToDestination = unitHelper.sqDist(location, self.destination);
@@ -35,7 +36,7 @@ var prophetHelper = {
     let visibleRobotMap = self.getVisibleRobotMap();
 
     // Set new destination if none exist
-    if (!self.destination || !Object.keys(self.destination).length) {
+    if ((!self.destination || !Object.keys(self.destination).length)) {
       if (self.task === "attack_opponent") {
         // self.log("Adding mirrored position as destination!");
         self.destination = unitHelper.reflect(self.me, self.getPassableMap(), self.me.id % 2 === 0);
@@ -57,19 +58,18 @@ var prophetHelper = {
       // self.log("Attack closest attackable opponent!");
       return self.attack(closestAttackableOpponent.x - location.x, closestAttackableOpponent.y - location.y);
     } else if (robotsInView.length > 0) {
-        let closestOpponent = unitHelper.getClosestOpponent(self.me, robotsInView);
+      let closestOpponent = unitHelper.getClosestOpponent(self.me, robotsInView);
 
-        if (closestOpponent) {
-          let previousDestination = {x: self.destination.x, y: self.destination.y};
-          self.destination = {x: closestOpponent.x, y: closestOpponent.y};
-          // self.log(self.destination);
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
-          let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.distanceMap, visibleRobotMap, location);
-          let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, populatedDistanceMap, visibleRobotMap, true);
-          self.destination = {x: previousDestination.x, y: previousDestination.y};
-          return self.move(nextDirection.x, nextDirection.y);
-        }
-
+      if (closestOpponent) {
+        let previousDestination = {x: self.destination.x, y: self.destination.y};
+        self.destination = {x: closestOpponent.x, y: closestOpponent.y};
+        // self.log(self.destination);
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+        let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.distanceMap, visibleRobotMap, location);
+        let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, populatedDistanceMap, [], true);
+        self.destination = {x: previousDestination.x, y: previousDestination.y};
+        return self.move(nextDirection.x, nextDirection.y);
+      }
     }
 
     if (self.task === "guard_castle") {
@@ -82,7 +82,7 @@ var prophetHelper = {
           // // self.log("At guard position now");
           return null; // stand in guard position
         }
-      } else if (distanceToDestination <= 32 && visibleRobotMap[self.destination.y][self.destination.x]) {
+      } else if (distanceToDestination <= 8 && visibleRobotMap[self.destination.y][self.destination.x]) {
           // self.log("Location to guard is occupied")
           // If destination occupied, get new closest source
           self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, visibleRobotMap, self.karbonite_map, self.fuel_map);
@@ -120,8 +120,8 @@ var prophetHelper = {
       // walk away from castle in search of guard position
       if (!self.castleMap) self.castleMap = unitHelper.createDistanceMap(self.castle, self.map);
       let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.castleMap, visibleRobotMap, location);
-      let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, populatedDistanceMap, visibleRobotMap, true);
-      return self.move(nextDirection.x, nextDirection.y);
+      let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, populatedDistanceMap, [], true);
+      if (self.fuel > self.SF) return self.move(nextDirection.x, nextDirection.y);
     }
 
     return null;

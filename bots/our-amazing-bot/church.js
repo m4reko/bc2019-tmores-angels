@@ -48,7 +48,7 @@ var churchHelper = {
       } else {
         self.log("No direction was found - cannot build");
       }
-    } else if ((self.karbonite >= 25 + self.SK && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 15) / 15 + 1))) || (self.karbonite > 250 && self.fuel > 500) || self.step > 700) {
+    } else if ((self.karbonite >= 25 + self.SK && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 15) / 15 + 1))) || (self.karbonite > 300 && self.fuel > 500) || self.step > 700) {
 
       let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
       let direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
