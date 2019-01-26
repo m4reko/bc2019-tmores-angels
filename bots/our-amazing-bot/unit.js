@@ -98,19 +98,7 @@ var unitHelper = {
   },
 
   getVisionRadius: (r) => {
-    if (r.unit === SPECS.PROPHET) {
-      return SPECS.PROPHET.VISION_RADIUS;
-    } else if (r.unit === SPECS.CASTLE) {
-      return SPECS.CASTLE.VISION_RADIUS;
-    } else if (r.unit === SPECS.CHURCH) {
-      return SPECS.CHURCH.VISION_RADIUS;
-    } else if (r.unit === SPECS.PILGRIM) {
-      return SPECS.PILGRIM.VISION_RADIUS;
-    } else if (r.unit === SPECS.CRUSADER) {
-      return SPECS.CRUSADER.VISION_RADIUS;
-    } else if (r.unit === SPECS.PREACHER) {
-      return SPECS.PREACHER.VISION_RADIUS;
-    }
+    return SPECS.UNITS[r.unit].VISION_RADIUS;
   },
 
   getClosestAttackableOpponent: (me, robots) => {
@@ -199,7 +187,7 @@ var unitHelper = {
 
   // createDistanceMap creates a distancemap according to the destination
   // should be stored and used with getNextDirection method
-  createDistanceMap: (dest, fullMap, robotMap = [], danger = [], range = 2) => {
+  createDistanceMap: (dest, fullMap, danger = null, range = 2) => {
     let distMap = []; // Init distMap
     for (let y = 0; y < fullMap.length; y++) {
       distMap[y] = [];
@@ -227,7 +215,13 @@ var unitHelper = {
 
           if (new_location.y >= 0 && new_location.y < fullMap.length && new_location.x >= 0 && new_location.x < fullMap.length) {
             if (typeof distMap[new_location.y] !== 'undefined' && typeof distMap[new_location.y][new_location.x] !== 'undefined' && distMap[new_location.y][new_location.x] === null) {
-              if (!unitHelper.isPassable(new_location, fullMap, robotMap)) {
+              let avoid = false;
+              if (danger) {
+                // check if spot is withing enemy vision
+                let distToEnemy = unitHelper.sqDist(new_location, danger);
+                if (distToEnemy <= unitHelper.getVisionRadius(danger)) avoid = true;
+              }
+              if (!fullMap[new_location.y] || !fullMap[new_location.y][new_location.x] || avoid) {
                 distMap[new_location.y][new_location.x] = -2;
                 if (current_location.z < range - 1) {
                   new_location.z = 1;
@@ -235,13 +229,6 @@ var unitHelper = {
                 }
               } else {
                 distMap[new_location.y][new_location.x] = moves + 1;
-                if (danger.length) {
-                  for (const enemy of danger) {
-                    // check if spot is withing enemy vision
-                    let distToEnemy = unitHelper.sqDist({x: new_location.x, y: new_location.y}, enemy);
-                    if (!([SPECS.PILGRIM, SPECS.CASTLE, SPECS.CHURCH].includes(enemy.unit)) && distToEnemy <= unitHelper.getVisionRadius(enemy)) distMap[new_location.y][new_location.x] += 100;
-                  }
-                }
                 new_location.z = 0;
                 next_locations.push(new_location)
               }
@@ -259,17 +246,32 @@ var unitHelper = {
     return distMap;
   },
 
-  addUnitsToDistanceMap: (distanceMap, unitMap, location) => {
+  addUnitsToDistanceMap: (distanceMap, unitMap, location, enemies = []) => {
     let resultMap = [];
-    for(let y = 0; y < distanceMap.length; y++){
+    for (let y = 0; y < distanceMap.length; y++) {
       resultMap.push([]);
-      for(let x = 0; x < distanceMap.length; x++){
-        if(location.x === x && location.y === y){
+      for (let x = 0; x < distanceMap.length; x++) {
+        if (location.x === x && location.y === y) {
           resultMap[y][x] = distanceMap[y][x];
+        } else {
+          resultMap[y][x] = unitMap[y][x] > 0 ? -2 : distanceMap[y][x];
         }
-        resultMap[y][x] = unitMap[y][x] > 0 ? -2 : distanceMap[y][x];
       }
     }
+    for (const enemy of enemies) {
+      let x = enemy.x;
+      let y = enemy.y;
+      let vision = unitHelper.getVisionRadius(enemy);
+      for (let currentX = x - 10; currentX <= x + 10; currentX++) {
+        for (let currentY = y - 10; currentY <= y + 10; currentY++) {
+          if (resultMap[y][x] < 0) continue;
+          let dist = unitHelper.sqDist({x: x, y: y}, {x: currentX, y: currentY});
+          if (dist > vision) continue;
+          resultMap[x][y] += (200 - dist);
+        }
+      }
+    }
+
     return resultMap;
   },
 
@@ -395,33 +397,33 @@ var unitHelper = {
   },
 
   //Get next direction according to a distance map
-  getNextDirection: (loc, range, vision, distMap, unitMap = [], backaway = false) => {
+  getNextDirection: (loc, range, vision, distMap, backaway = false) => {
     let currentValue = 1000;
-    if(backaway) currentValue = 0;
+    if (backaway) currentValue = 0;
     let currentLocations = [];
 
     // Test all positions in range and find the one closest to 0
     for (var y = loc.y - range; y <= loc.y + range; y++) {
       for (var x = loc.x - range; x <= loc.x + range; x++) {
         if (y < distMap.length && x < distMap.length && x >= 0 && y >= 0) {
-          if (typeof distMap === 'undefined' || typeof distMap[y] === 'undefined' || typeof distMap[y][x] === 'undefined' || distMap[y][x] === null || (unitMap[y] && unitMap[y][x] > 0)) continue;
+          if (typeof distMap[y] === 'undefined' || distMap[y][x] === 'undefined' || distMap[y][x] < 0 || distMap[y][x] === null) continue;
+          if (loc.x == x && loc.y == y) continue;
           let dist = unitHelper.sqDist(loc, {x: x, y: y});
           if (dist > range || dist > vision) continue;
           let shouldMove = ((backaway && distMap[y][x] > currentValue) || (!backaway && distMap[y][x] < currentValue));
-          if ( shouldMove && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {
+          if (shouldMove) {
             currentLocations = [];
             currentLocations.push({x: x, y: y, dist: dist});
             currentValue = distMap[y][x];
-          } else if (distMap[y][x] === currentValue && distMap[y][x] > -1 && !(loc.x == x && loc.y == y)) {
+          } else if (distMap[y][x] === currentValue) {
             currentLocations.push({x: x, y: y, dist: dist})
           }
         }
       }
     }
-    currentLocations.sort((a, b) => {
+    let currentLocation = currentLocations.sort((a, b) => {
       return b.dist - a.dist;
-    });
-    let currentLocation = currentLocations.pop();
+    }).pop();
     if (!currentLocation) return false;
     return {y: currentLocation.y - loc.y, x: currentLocation.x - loc.x};
   },

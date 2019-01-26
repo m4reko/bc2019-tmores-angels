@@ -42,7 +42,7 @@ var crusaderHelper = {
     // Set new destination if none exist
     if (!self.destination) {
       self.mapIsHorizontal = 1;
-      if (nav.isVertical(self.map)) {
+      if (nav.isVertical(self.getPassableMap())) {
         self.mapIsHorizontal = 0;
         self.log("Map is vertically mirrored");
       } else {
@@ -63,7 +63,7 @@ var crusaderHelper = {
       }
       else if (self.task === "guard_castle") {
         self.log("Adding guard position as destination!");
-        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.map);
+        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.getPassableMap());
       }
 
       distanceToDestination = unitHelper.sqDist(location, self.destination);
@@ -83,7 +83,7 @@ var crusaderHelper = {
         if (nearbyRobots[i].team != self.me.team) {
           let previousDestination = self.destination;
           self.destination = nearbyRobots[i];
-          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+          self.distanceMap = unitHelper.createDistanceMap(self.destination, self.getPassableMap());
           let nextDirection = unitHelper.getNextDirection(location, 9, self.vision, self.distanceMap, self.getVisibleRobotMap());
           self.destination = previousDestination;
           if (nextDirection) return self.move(nextDirection.x, nextDirection.y);
@@ -95,7 +95,7 @@ var crusaderHelper = {
       // If at destination and no enemy to attack or walk towards,
       // go to new guard position
       if (distanceToDestination <= 2) {
-        return;
+        return null;
       }
     } else if (self.task === "attack_opponent") {
       // TODO: If there is a Message from other robot saying help, go there!
@@ -119,7 +119,7 @@ var crusaderHelper = {
 
     if (self.destination) {
       // Walk towards destination
-      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.getPassableMap());
       let nextDirection = unitHelper.getNextDirection(location, 9, self.vision, self.distanceMap, self.getVisibleRobotMap());
       self.log("Moving crusader to: (" +(location.x+nextDirection.x) + ", " +(location.y+nextDirection.y) + ")");
       if (nextDirection) {

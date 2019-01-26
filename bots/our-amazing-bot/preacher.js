@@ -15,6 +15,8 @@ var preacherHelper = {
     let location = {x: self.me.x, y: self.me.y};
     let distanceToDestination = Infinity;
 
+    let map = self.getPassableMap();
+
     if (self.destination) {
       distanceToDestination = unitHelper.sqDist(location, self.destination);
       self.log("distance from destination: " + distanceToDestination);
@@ -29,7 +31,7 @@ var preacherHelper = {
           self.log("I recieved a signal");
           self.log("signal: " + signal);
           if (signal) {
-            initTarget = {x: signal % self.map.length, y: (signal - signal % self.map.length) / self.map.length};
+            initTarget = {x: signal % map.length, y: (signal - signal % map.length) / map.length};
             self.log("I'm going to " + initTarget.x + ", " + initTarget.y);
           }
         }
@@ -45,7 +47,7 @@ var preacherHelper = {
       if (self.target) {
         self.destination = self.target;
       } else {
-        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map, self.fuel_map);
+        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.castle, map, self.getVisibleRobotMap(), self.getKarboniteMap(), self.getFuelMap());
       }
 
       self.task = "go_to_enemy";
@@ -73,7 +75,7 @@ var preacherHelper = {
 
     if (location.x === self.destination.x && location.y === self.destination.y) {
       if (self.task==="go_to_enemy") {
-        let newGuardPosition = unitHelper.getCastleGuardPosition(self.castle, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map, self.fuel_map);
+        let newGuardPosition = unitHelper.getCastleGuardPosition(self.castle, self.castle, map, self.getVisibleRobotMap(), self.getKarboniteMap(), self.getFuelMap());
 
         self.task = "go_to_castle";
         self.destination = newGuardPosition;
@@ -89,7 +91,7 @@ var preacherHelper = {
           self.log("I recieved a signal");
           self.log("signal: " + signal);
           if (signal) {
-            self.destination = {x: signal % self.map.length, y: (signal - signal % self.map.length) / self.map.length};
+            self.destination = {x: signal % map.length, y: (signal - signal % map.length) / map.length};
             self.task = "go_to_enemy";
           }else{
             return null;
@@ -105,7 +107,7 @@ var preacherHelper = {
         self.log("Location to guard is occupied");
         if (self.waitTurn) self.waitTurn = 0;
         // If destination occupied, get new closest source
-        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.castle, self.map, visibleRobotMap, self.karbonite_map, self.fuel_map);
+        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.castle, map, visibleRobotMap, self.getKarboniteMap(), self.getFuelMap());
       }
     }
 
@@ -113,7 +115,7 @@ var preacherHelper = {
 
       if (!(self.destination.x === self.lastDestination.x && self.destination.y === self.lastDestination.y)) {
         self.log("Created distance map");
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, map);
         self.lastDestination = {x: self.destination.x, y: self.destination.y};
       }
 

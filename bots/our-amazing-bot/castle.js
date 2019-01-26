@@ -3,7 +3,7 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var castleHelper = {
   turn: self => {
-    if(!self.castleAmount){
+    if (!self.castleAmount) {
       // Just setting castle amount to 1 before we counted them
       self.castleAmount = 1;
     }
@@ -16,6 +16,7 @@ var castleHelper = {
     let selfOffer = self.last_offer[team];
 
     let castleTalking = self.getVisibleRobots().filter(r => r.team === team && r.castle_talk > 0);
+    let map = self.getPassableMap();
 
     let tradeSign = 1;
     if (team === 0) {
@@ -26,6 +27,17 @@ var castleHelper = {
     if (self.step === 1) {
       // things to do first turn only
       // count castles
+      self.castleLocations = [
+        [-1, -1],
+        [-1, -1],
+        [-1, -1]
+      ];
+      self.oppCastleLocations = [
+        [-1, -1],
+        [-1, -1],
+        [-1, -1]
+      ];
+
       let castles = selfOffer[0] || 0;
       castles += 1 * tradeSign;
       self.castleNumber = castles * tradeSign;
@@ -77,32 +89,32 @@ var castleHelper = {
     } else if (self.step === 5) {
       // things to do on the fifth turn only
       // check the map and calculate the position of opposing castles
-      const vertical = structureHelper.isVertical(self.map);
+      const vertical = structureHelper.isVertical(map);
       if (vertical) {
         if (self.castleLocations[0][0] >= 0) {
-          self.oppCastleLocations[0][0] = self.map[0].length - (self.castleLocations[0][0] + 1);
+          self.oppCastleLocations[0][0] = map[0].length - (self.castleLocations[0][0] + 1);
           self.oppCastleLocations[0][1] = self.castleLocations[0][1];
         }
         if (self.castleLocations[1][0] >= 0) {
-          self.oppCastleLocations[1][0] = self.map[0].length - (self.castleLocations[1][0] + 1);
+          self.oppCastleLocations[1][0] = map[0].length - (self.castleLocations[1][0] + 1);
           self.oppCastleLocations[1][1] = self.castleLocations[1][1];
         }
         if (self.castleLocations[2][0] >= 0) {
-          self.oppCastleLocations[2][0] = self.map[0].length - (self.castleLocations[2][0] + 1);
+          self.oppCastleLocations[2][0] = map[0].length - (self.castleLocations[2][0] + 1);
           self.oppCastleLocations[2][1] = self.castleLocations[2][1];
         }
       } else {
         if (self.castleLocations[0][1] >= 0) {
           self.oppCastleLocations[0][0] = self.castleLocations[0][0];
-          self.oppCastleLocations[0][1] = self.map.length - (self.castleLocations[0][1] + 1);
+          self.oppCastleLocations[0][1] = map.length - (self.castleLocations[0][1] + 1);
         }
         if (self.castleLocations[1][1] >= 0) {
           self.oppCastleLocations[1][0] = self.castleLocations[1][0];
-          self.oppCastleLocations[1][1] = self.map.length - (self.castleLocations[1][1] + 1);
+          self.oppCastleLocations[1][1] = map.length - (self.castleLocations[1][1] + 1);
         }
         if (self.castleLocations[2][1] >= 0) {
           self.oppCastleLocations[2][0] = self.castleLocations[2][0];
-          self.oppCastleLocations[2][1] = self.map.length - (self.castleLocations[2][1] + 1);
+          self.oppCastleLocations[2][1] = map.length - (self.castleLocations[2][1] + 1);
         }
       }
       self.log("CastleAmount: " + self.castleAmount);
@@ -111,9 +123,9 @@ var castleHelper = {
         self.resourcesManagedFuel = [];
         self.managedKarbonite = 0;
         self.managedFuel = 0;
-        for (let y = 0; y < self.karbonite_map.length; y++) {
-          for (let x = 0; x < self.karbonite_map.length; x++) {
-            if (self.karbonite_map[y][x]) {
+        for (let y = 0; y < self.getKarboniteMap().length; y++) {
+          for (let x = 0; x < self.getKarboniteMap().length; x++) {
+            if (self.getKarboniteMap()[y][x]) {
               let dangerous = false;
               for (const enemycastle of self.oppCastleLocations) {
                 if (enemycastle[0] === -1) continue;
@@ -138,7 +150,7 @@ var castleHelper = {
                 }
               }
             }
-            if (self.fuel_map[y][x]) {
+            if (self.getFuelMap()[y][x]) {
               let dangerous = false;
               for (const enemycastle of self.oppCastleLocations) {
                 if (enemycastle[0] === -1) continue;
@@ -187,9 +199,9 @@ var castleHelper = {
     }
 
     if (!self.closestKarb || !self.closestFuel) {
-      self.closestKarb = structureHelper.getClosestResource({x: self.me.x, y: self.me.y}, self.karbonite_map);
+      self.closestKarb = structureHelper.getClosestResource({x: self.me.x, y: self.me.y}, self.getKarboniteMap());
       self.log("My closest karbonite is here: " + self.closestKarb.x + ", " + self.closestKarb.y);
-      self.closestFuel = structureHelper.getClosestResource({x: self.me.x, y: self.me.y}, self.fuel_map);
+      self.closestFuel = structureHelper.getClosestResource({x: self.me.x, y: self.me.y}, self.getFuelMap());
       self.log("My closest fuel is here: " + self.closestFuel.x + ", " + self.closestFuel.y);
     }
 
@@ -212,8 +224,8 @@ var castleHelper = {
     const enemies = self.getVisibleRobots().filter(r => r.team !== team);
     const allies = self.getVisibleRobots().filter(r => r.team === team && (r.unit === SPECS.PREACHER || r.unit === SPECS.PROPHET));
     if (enemies.length > 0) {
-      let spawnLimit = 2;
-      if(enemies.length > 3) spawnLimit = enemies.length;
+      let spawnLimit = 1;
+      if (enemies.length > 2) spawnLimit = enemies.length;
 
       let preachers = enemies.filter(r => r.unit === SPECS.PREACHER || r.unit === SPECS.CRUSADER).length;
       let shortestDist = Infinity;
@@ -227,11 +239,11 @@ var castleHelper = {
         }
       }
       if (allies.length < spawnLimit && self.karbonite >= 30 && self.fuel >= 50) {
-        let direction = structureHelper.getDirectionTowards(location, closestEnemy, self.map, self.getVisibleRobotMap());
+        let direction = structureHelper.getDirectionTowards(location, closestEnemy, map, self.getVisibleRobotMap());
 
         if (direction) {
           self.log('Building a preacher/prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
-          let pos = closestEnemy.y * self.map.length + closestEnemy.x;
+          let pos = closestEnemy.y * map.length + closestEnemy.x;
           self.signal(parseInt(pos.toString(), 10), 2);
           return self.buildUnit((preachers ? SPECS.PREACHER : SPECS.PROPHET), direction.x, direction.y);
         } else {
@@ -240,7 +252,7 @@ var castleHelper = {
       } else {
         let alliesWithin8 = allies.filter(r => r.unit === SPECS.PREACHER && structureHelper.nav.sqDist(location, r) <= 8);
         if (alliesWithin8.length) {
-          let pos = closestEnemy.y * self.map.length + closestEnemy.x;
+          let pos = closestEnemy.y * map.length + closestEnemy.x;
           self.signal(parseInt(pos.toString(), 10), 8);
         }
         if(structureHelper.nav.sqDist(location, closestEnemy) <= 64){
@@ -252,7 +264,7 @@ var castleHelper = {
     // Spawn prophets
     if ((self.karbonite >= 25 + self.SK && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 12) / 12)) && self.spawnedKarbonite > 0 && self.spawnedFuel > 0) || (self.karbonite > 250 && self.fuel > 600) || self.step > 700) {
       let location = {x: self.me.x, y: self.me.y};
-      let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
+      let possibleDirections = structureHelper.getPossibleDirections(location, map, self.getVisibleRobotMap())
       let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
 
       if (randomDirection) {
@@ -306,9 +318,9 @@ var castleHelper = {
         targetResource = {x: -1, y: -1};
         // targetResource = {x: self.me.x + randomDirection.x, y: self.me.y + randomDirection.y};
       }
-      let direction = structureHelper.getDirectionTowards(location, targetResource, self.map, self.getVisibleRobotMap());
+      let direction = structureHelper.getDirectionTowards(location, targetResource, map, self.getVisibleRobotMap());
       // self.log("Direction: " + direction);
-      //let pos = structureHelper.posTo6Bit(targetResource, self.map.length);
+      //let pos = structureHelper.posTo6Bit(targetResource, map.length);
       if (direction) {
         if (spawnKarbonite) {
           if (self.spawnedClosestKarb === 0) self.spawnedClosestKarb++;
@@ -318,7 +330,7 @@ var castleHelper = {
           if (self.spawnedClosestFuel === 0) self.spawnedClosestFuel++;
           else self.spawnedFuel++;
         }
-        let pos = targetResource.y * self.map.length + targetResource.x;
+        let pos = targetResource.y * map.length + targetResource.x;
         if (pos) {
           self.signal(parseInt(pos.toString(), 10), 2);
         }
@@ -333,7 +345,7 @@ var castleHelper = {
 
     // if (self.karbonite >= 50 && self.spawnedCrusaders < 4 && self.spawnedKarbonite > 0 && self.spawnedFuel > 0) {
     //   let location = {x: self.me.x, y: self.me.y};
-    //   let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
+    //   let possibleDirections = structureHelper.getPossibleDirections(location, map, self.getVisibleRobotMap())
     //   let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
     //   if(randomDirection){
     //     self.spawnedCrusaders++;

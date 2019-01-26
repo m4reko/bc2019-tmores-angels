@@ -65,15 +65,11 @@ var structureHelper = {
 
   getPossibleDirections: (loc, fullMap, robotMap) => {
     let possibleDirections = [];
-    for (var x = -1; x <= 1; x++) {
-      for (var y = -1; y <= 1; y++) {
-        if (loc.x + x < 0 || loc.x + x >= fullMap.length || loc.y + y < 0 || loc.y + y >= fullMap.length) continue;
-        if (x == 0 && y == 0) continue;
-        let dir = {x: x, y: y};
-        let testLocation = {x: (loc.x + dir.x), y: (loc.y-dir.y)};
-        if (structureHelper.isPassable(testLocation, fullMap, robotMap)) {
-          possibleDirections.push(dir);
-        }
+    for (const direction of structureHelper.directions) {
+      if (loc.x + direction.x < 0 || loc.x + direction.x >= fullMap.length || loc.y + direction.y < 0 || loc.y + direction.y >= fullMap.length) continue;
+      let testLocation = {x: loc.x + direction.x, y: loc.y + direction.y};
+      if (structureHelper.isPassable(testLocation, fullMap, robotMap)) {
+        possibleDirections.push(direction);
       }
     }
     return possibleDirections;

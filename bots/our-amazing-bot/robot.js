@@ -9,25 +9,9 @@ import preacherHelper from './preacher.js';
 class MyRobot extends BCAbstractRobot {
     constructor() {
         super();
-        this.pendingRecievedMessages = {};
-        this.enemyCastles = [];
-        this.castleLocations = [
-          [-1, -1],
-          [-1, -1],
-          [-1, -1]
-        ];
-        this.oppCastleLocations = [
-          [-1, -1],
-          [-1, -1],
-          [-1, -1]
-        ];
         this.SK = 60;
         this.SF = 130;
         this.vision = 0;
-        this.castleAmount = 0;
-        this.castleNumber = null;
-        this.heatMap = [];
-        this.mapFragments = 8;
         this.helper = null;
         this.step = 0;
     }

@@ -3,7 +3,7 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var prophetHelper = {
   turn: self => {
-    // // self.log("Prophet:");
+    self.log("Prophet:");
     // On the first turn, find out our base
     if (!self.castle) {
       let visibleRobots = self.getVisibleRobots();
@@ -21,13 +21,14 @@ var prophetHelper = {
         self.task = "guard_castle";
     }
 
+    let map = self.getPassableMap();
+
     // Current positions
     let location = {x: self.me.x, y: self.me.y};
     let distanceToDestination = Infinity;
     // let randomKarb = unitHelper.getRandomKarbonite(self.getKarboniteMap());
 
     if (!self.lastDestination) self.lastDestination = {x:-1, y:-1};
-    if (lowtime) self.destination = {x: location.x, y: location.y};
 
     if (self.destination) {
       distanceToDestination = unitHelper.sqDist(location, self.destination);
@@ -42,7 +43,7 @@ var prophetHelper = {
         self.destination = unitHelper.reflect(self.me, self.getPassableMap(), self.me.id % 2 === 0);
       } else if (self.task === "guard_castle") {
         // self.log("Just woke up. Adding guard position as destination!");
-        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, visibleRobotMap, self.karbonite_map, self.fuel_map);
+        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, map, visibleRobotMap, self.getKarboniteMap(), self.getFuelMap());
         // self.log(self.destination);
       }
       distanceToDestination = unitHelper.sqDist(location, self.destination);
@@ -65,11 +66,11 @@ var prophetHelper = {
         let previousDestination = {x: self.destination.x, y: self.destination.y};
         self.destination = {x: closestOpponent.x, y: closestOpponent.y};
         // self.log(self.destination);
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, map);
         let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.distanceMap, visibleRobotMap, location);
-        let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, populatedDistanceMap, [], true);
+        let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, populatedDistanceMap, true);
         self.destination = {x: previousDestination.x, y: previousDestination.y};
-        return self.move(nextDirection.x, nextDirection.y);
+        if (nextDirection) return self.move(nextDirection.x, nextDirection.y);
       }
     }
 
@@ -77,13 +78,15 @@ var prophetHelper = {
       // If at destination and no enemy to attack or walk towards,
       // go to new guard position
       if (distanceToDestination === 0) {
-
+        if ((self.me.x + self.me.y) % 2 !== (self.castle.x + self.castle.y) % 2) {
+          self.destination = unitHelper.getCastleGuardPosition(location, self.castle, map, visibleRobotMap, self.getKarboniteMap(), self.getFuelMap());
+        } else {
           return null; // stand in guard position
         }
       } else if (distanceToDestination <= 8 && visibleRobotMap[self.destination.y][self.destination.x]) {
           // self.log("Location to guard is occupied")
           // If destination occupied, get new closest guard position
-          self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, visibleRobotMap, self.karbonite_map, self.fuel_map);
+          self.destination = unitHelper.getCastleGuardPosition(location, self.castle, map, visibleRobotMap, self.getKarboniteMap(), self.getFuelMap());
       }
     } else if (self.task === "attack_opponent") {
 
@@ -94,16 +97,17 @@ var prophetHelper = {
       if (distanceToDestination === 0) {
         self.task = "guard_castle";
         // self.log("Adding guard position as destination!");
-        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, visibleRobotMap, self.karbonite_map, self.fuel_map);
+        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, map, visibleRobotMap, self.getKarboniteMap(), self.getFuelMap());
         // self.log(self.destination);
       }
     }
 
     // Walk towards destination
     if (Object.keys(self.destination).length) {
+      self.log("I want to go here: " + self.destination.x + ", " + self.destination.y + " I'm at: " + location.x + ", " + location.y);
       if (self.destination.y !== self.lastDestination.y && self.destination.x !== self.lastDestination.x) {
         // self.log(self.destination);
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, map);
         self.lastDestination.x = self.destination.x;
         self.lastDestination.y = self.destination.y;
       }
@@ -111,15 +115,20 @@ var prophetHelper = {
       if (self.distanceMap) {
         let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.distanceMap, visibleRobotMap, location);
         let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, populatedDistanceMap);
-        // self.log("Moving Prophet to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
-        if (self.fuel > self.SF) return self.move(nextDirection.x, nextDirection.y);
+        if (nextDirection) {
+          self.log("Moving Prophet to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
+          if (self.fuel > self.SF) return self.move(nextDirection.x, nextDirection.y);
+        }
       }
     } else {
       // walk away from castle in search of guard position
-      if (!self.castleMap) self.castleMap = unitHelper.createDistanceMap(self.castle, self.map);
+      self.log("I want to walk away from my castle");
+      if (!self.castleMap) self.castleMap = unitHelper.createDistanceMap(self.castle, map);
       let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.castleMap, visibleRobotMap, location);
-      let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, populatedDistanceMap, [], true);
-      if (self.fuel > self.SF) return self.move(nextDirection.x, nextDirection.y);
+      let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, populatedDistanceMap, true);
+      if (nextDirection) {
+        if (self.fuel > self.SF) return self.move(nextDirection.x, nextDirection.y);
+      }
     }
 
     return null;
