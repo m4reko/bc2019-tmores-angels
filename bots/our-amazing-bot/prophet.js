@@ -51,8 +51,8 @@ var prophetHelper = {
     let robotsInView = self.getVisibleRobots().filter(r => r.team !== self.me.team);
     let robotsInRange = robotsInView.filter(r => unitHelper.sqDist(location, r) >= 16);
 
-    // Attack if opponent nearby!
     if (robotsInRange.length) {
+      // Attack if opponent in shooting range!
       let closestAttackableOpponent = unitHelper.getClosestAttackableOpponent(self.me, robotsInRange);
       // self.log("Attack closest attackable opponent!");
       return self.attack(closestAttackableOpponent.x - location.x, closestAttackableOpponent.y - location.y);
@@ -60,6 +60,7 @@ var prophetHelper = {
         let closestOpponent = unitHelper.getClosestOpponent(self.me, robotsInView);
 
         if (closestOpponent) {
+          // Move in opposite direction from enemy if enemy too close
           let previousDestination = {x: self.destination.x, y: self.destination.y};
           self.destination = {x: closestOpponent.x, y: closestOpponent.y};
           // self.log(self.destination);
@@ -76,15 +77,12 @@ var prophetHelper = {
       // If at destination and no enemy to attack or walk towards,
       // go to new guard position
       if (distanceToDestination === 0) {
-        if ((self.me.x + self.me.y) % 2 !== (self.castle.x + self.castle.y) % 2) {
-          self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, visibleRobotMap, self.karbonite_map, self.fuel_map);
-        } else {
-          // // self.log("At guard position now");
+
           return null; // stand in guard position
-        }
-      } else if (distanceToDestination <= 32 && visibleRobotMap[self.destination.y][self.destination.x]) {
+
+      } else if (distanceToDestination <= 2 && visibleRobotMap[self.destination.y][self.destination.x]) {
           // self.log("Location to guard is occupied")
-          // If destination occupied, get new closest source
+          // If destination occupied, get new closest guard position
           self.destination = unitHelper.getCastleGuardPosition(location, self.castle, self.map, visibleRobotMap, self.karbonite_map, self.fuel_map);
       }
     } else if (self.task === "attack_opponent") {
