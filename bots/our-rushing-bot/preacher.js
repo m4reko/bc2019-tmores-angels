@@ -1,4 +1,5 @@
 import unitHelper from './unit.js';
+import nav from './nav.js';
 import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var preacherHelper = {
@@ -20,39 +21,21 @@ var preacherHelper = {
       self.log("distance from destination: " + distanceToDestination);
     }
 
-    let initTarget = null;
-    if (self.step === 1) {
-      if (self.isRadioing(self.castle)) {
-        // get position from castle to go to
-        if (self.castle.signal_radius === 2) {
-          let signal = self.castle.signal;
-          self.log("I recieved a signal");
-          self.log("signal: " + signal);
-          if (signal) {
-            initTarget = {x: signal % self.map.length, y: (signal - signal % self.map.length) / self.map.length};
-            self.log("I'm going to " + initTarget.x + ", " + initTarget.y);
-          }
-        }
-      }
-    }
-
-    if (initTarget !== null) {
-      self.target = initTarget;
-    }
-
     if (!self.destination) {
-      // Start by going towards an enemy
-      if (self.target) {
-        self.destination = self.target;
+      self.mapIsHorizontal = 1;
+      if (nav.isVertical(self.map)) {
+        self.mapIsHorizontal = 0;
+        self.log("Map is vertically mirrored");
       } else {
-        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.castle, self.map, self.getVisibleRobotMap(), self.karbonite_map, self.fuel_map);
+        self.log("Map is horizontally mirrored");
       }
 
-      self.task = "go_to_enemy";
-      self.log("Going towards enemy position given by castle:");
+      self.spawnPoint = location;
+      self.mirroredSpawn = unitHelper.reflect(self.me, self.getPassableMap(), self.mapIsHorizontal);
+      self.destination = self.mirroredSpawn;
+
       self.log(location);
       self.log(self.destination);
-      self.log("next direction");
     }
 
     const enemies = self.getVisibleRobots().filter(r => r.team !== self.me.team);
@@ -81,57 +64,24 @@ var preacherHelper = {
         self.log(self.destination);
         self.log("castle position: (" + self.castle.x + ", " + self.castle.y + ")");
 
-      } else if (self.task==="go_to_castle") {
-
-        if (self.isRadioing(self.castle) && unitHelper.sqDist(location, self.castle) <= 8 && self.castle.signal_radius === 8) {
-          // get position from castle to go to
-          let signal = self.castle.signal;
-          self.log("I recieved a signal");
-          self.log("signal: " + signal);
-          if (signal) {
-            self.destination = {x: signal % self.map.length, y: (signal - signal % self.map.length) / self.map.length};
-            self.task = "go_to_enemy";
-          }else{
-            return null;
-          }
-        } else {
-          self.log("Standing still");
-          return null;
-        }
-      }
-    } else if(distanceToDestination<=16){
-      let visibleRobotMap = self.getVisibleRobotMap();
-      if (visibleRobotMap[self.destination.y][self.destination.x]) {
-        self.log("Location to guard is occupied");
-        if (self.waitTurn) self.waitTurn = 0;
-        // If destination occupied, get new closest source
-        self.destination = unitHelper.getCastleGuardPosition(self.castle, self.castle, self.map, visibleRobotMap, self.karbonite_map, self.fuel_map);
       }
     }
 
     if (Object.keys(self.destination).length) {
 
-      if (!(self.destination.x === self.lastDestination.x && self.destination.y === self.lastDestination.y)) {
-        self.log("Created distance map");
-        self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
-        self.lastDestination = {x: self.destination.x, y: self.destination.y};
-      }
-
+      self.distanceMap = unitHelper.createDistanceMap(self.destination, self.map);
       let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.distanceMap, self.getVisibleRobotMap(), location);
       let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, populatedDistanceMap);
       self.log(nextDirection);
 
       if (nextDirection) {
-        self.log("distance map value on my position: " + self.distanceMap[location.y][location.x]);
-        self.log("distance map value on next position: " + self.distanceMap[location.y + nextDirection.y][location.x + nextDirection.x]);
-        self.log("direction:" + nextDirection.y + ", " + nextDirection.x)
-        self.log("Just moving preacher one step closer to: (" + (self.destination.x) + ", " + (self.destination.y) + ")");
-
         self.log(nextDirection);
         return self.move(nextDirection.x, nextDirection.y);
       } else {
         self.log("No space to move to");
       }
+    }else{
+      self.log("No destination.");
     }
 
     return null;

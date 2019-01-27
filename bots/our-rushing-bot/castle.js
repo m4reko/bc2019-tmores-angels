@@ -3,6 +3,15 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var castleHelper = {
   turn: self => {
+    // -----
+    // SETTINGS FOR OUR RUSHING BOT
+    // -----
+    let rush_with = [];
+    rush_with[0] = SPECS.CRUSADER;
+    rush_with[1] = SPECS.PREACHER;
+
+    const map = self.getPassableMap();
+
     if(!self.castleAmount){
       // Just setting castle amount to 1 before we counted them
       self.castleAmount = 1;
@@ -106,6 +115,7 @@ var castleHelper = {
         }
       }
       self.log("CastleAmount: " + self.castleAmount);
+
       if (!self.resourcesManagedKarbonite || !self.resourcesManagedFuel || !self.managedKarbonite || !self.managedFuel) {
         self.resourcesManagedKarbonite = [];
         self.resourcesManagedFuel = [];
@@ -208,23 +218,8 @@ var castleHelper = {
 
     let location = {x: self.me.x, y: self.me.y};
 
-    // Spawn prophets
-    if ( (self.karbonite >= 25 && self.fuel >= 50)) {
-      let location = {x: self.me.x, y: self.me.y};
-      let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
-      let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
-
-      if (randomDirection) {
-        self.log('Building a crusader at ' + (self.me.x + randomDirection.x) + ',' + (self.me.y + randomDirection.y));
-        return self.buildUnit(SPECS.CRUSADER, randomDirection.x, randomDirection.y);
-      } else {
-        self.log("No random direction was found - cannot build");
-      }
-    }
-
-
     // Spawn pilgrims huge if statement
-    if (self.karbonite >= (self.turn < 10 ? 20 : 10 + self.SK) && self.fuel >= 50 + self.SF && ((self.spawnedKarbonite < 1 || self.spawnedFuel < 1) || self.spawnedClosestFuel === 0 || self.spawnedClosestKarb === 0)) {
+    if (self.karbonite >= (self.turn < 10 ? 20 : 10 + self.SK) && self.fuel >= 50 + self.SF && ((self.spawnedKarbonite < 2 || self.spawnedFuel < 1) || self.spawnedClosestFuel === 0 || self.spawnedClosestKarb === 0)) {
       self.log("spawning pilgrim");
       let spawnKarbonite = true;
       if (self.spawnedClosestKarb === 0 || self.spawnedClosestFuel === 0) {
@@ -264,9 +259,9 @@ var castleHelper = {
         targetResource = {x: -1, y: -1};
         // targetResource = {x: self.me.x + randomDirection.x, y: self.me.y + randomDirection.y};
       }
-      let direction = structureHelper.getDirectionTowards(location, targetResource, self.map, self.getVisibleRobotMap());
+      let direction = structureHelper.getDirectionTowards(location, targetResource, map, self.getVisibleRobotMap());
       // self.log("Direction: " + direction);
-      //let pos = structureHelper.posTo6Bit(targetResource, self.map.length);
+      //let pos = structureHelper.posTo6Bit(targetResource, map.length);
       if (direction) {
         if (spawnKarbonite) {
           if (self.spawnedClosestKarb === 0) self.spawnedClosestKarb++;
@@ -276,10 +271,8 @@ var castleHelper = {
           if (self.spawnedClosestFuel === 0) self.spawnedClosestFuel++;
           else self.spawnedFuel++;
         }
-        let pos = targetResource.y * self.map.length + targetResource.x;
-        if (pos) {
-          self.signal(parseInt(pos.toString(), 10), 2);
-        }
+        let pos = targetResource.y * map.length + targetResource.x;
+        self.signal(parseInt(pos.toString(), 10), 2);
         self.log('Building a pilgrim at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
         self.log('The target is: ' + targetResource.x + ", " + targetResource.y);
         return self.buildUnit(SPECS.PILGRIM, direction.x, direction.y);
@@ -287,6 +280,86 @@ var castleHelper = {
         self.log("No open direction was found - cannot build");
       }
     }
+
+    // Spawn attack units
+    if ( self.step > 50 && (self.karbonite >= 25 && self.fuel >= 50)) {
+      let location = {x: self.me.x, y: self.me.y};
+      let possibleDirections = structureHelper.getPossibleDirections(location, self.map, self.getVisibleRobotMap())
+      let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+
+      if (randomDirection) {
+        self.log('Building a unit at ' + (self.me.x + randomDirection.x) + ',' + (self.me.y + randomDirection.y));
+        return self.buildUnit(rush_with[self.step % rush_with.length], randomDirection.x, randomDirection.y);
+      } else {
+        self.log("No random direction was found - cannot build");
+      }
+    }
+
+
+    // // Spawn pilgrims huge if statement
+    // if (self.karbonite >= (self.turn < 10 ? 20 : 10 + self.SK) && self.fuel >= 50 + self.SF && ((self.spawnedKarbonite < 1 || self.spawnedFuel < 1) || self.spawnedClosestFuel === 0 || self.spawnedClosestKarb === 0)) {
+    //   self.log("spawning pilgrim");
+    //   let spawnKarbonite = true;
+    //   if (self.spawnedClosestKarb === 0 || self.spawnedClosestFuel === 0) {
+    //     spawnKarbonite = self.spawnedClosestKarb === 0;
+    //   } else {
+    //     spawnKarbonite = (self.spawnedKarbonite <= (self.spawnedFuel === self.managedFuel ? self.spawnedFuel : self.managedKarbonite)) && !(self.spawnedKarbonite === self.managedKarbonite);
+    //   }
+    //   let location = {x: self.me.x, y: self.me.y};
+    //
+    //   // self.log("SpawnKarbonite: " + spawnKarbonite);
+    //   // self.log("SpawnedKarbonite: " + self.spawnedKarbonite);
+    //   // self.log("ManagedKarbonite: " + self.managedKarbonite);
+    //   // self.log("SpawnedFuel: " + self.spawnedFuel);
+    //   // self.log("ManagedFuel: " + self.managedFuel);
+    //   // self.log("ClosestKarbonite: " + self.spawnedClosestKarb);
+    //   // self.log("ClosestFuel: " + self.spawnedClosestFuel);
+    //
+    //   let karbSources = self.resourcesManagedKarbonite || [];
+    //   let fuelSources = self.resourcesManagedFuel || [];
+    //   let targetResource = {x: 0, y: 0};
+    //   if (spawnKarbonite && (self.spawnedClosestKarb === 0 || karbSources.length > 0)) {
+    //     if (self.spawnedClosestKarb === 0) {
+    //       targetResource = self.closestKarb;
+    //     } else {
+    //       // self.log(karbSources);
+    //       targetResource = self.resourcesManagedKarbonite.pop();
+    //     }
+    //   } else if (!spawnKarbonite && (self.spawnedClosestFuel === 0 || fuelSources.length > 0)) {
+    //     if (self.spawnedClosestFuel === 0) {
+    //       targetResource = self.closestFuel;
+    //     } else {
+    //       // self.log(fuelSources);
+    //       targetResource = self.resourcesManagedFuel.pop();
+    //     }
+    //   } else {
+    //     // no need to spawn another pilgrim
+    //     targetResource = {x: -1, y: -1};
+    //     // targetResource = {x: self.me.x + randomDirection.x, y: self.me.y + randomDirection.y};
+    //   }
+    //   let direction = structureHelper.getDirectionTowards(location, targetResource, self.map, self.getVisibleRobotMap());
+    //   // self.log("Direction: " + direction);
+    //   //let pos = structureHelper.posTo6Bit(targetResource, self.map.length);
+    //   if (direction) {
+    //     if (spawnKarbonite) {
+    //       if (self.spawnedClosestKarb === 0) self.spawnedClosestKarb++;
+    //       else self.spawnedKarbonite++;
+    //     }
+    //     else {
+    //       if (self.spawnedClosestFuel === 0) self.spawnedClosestFuel++;
+    //       else self.spawnedFuel++;
+    //     }
+    //     let pos = targetResource.y * self.map.length + targetResource.x;
+    //     if (pos) {
+    //       self.signal(parseInt(pos.toString(), 10), 2);
+    //     }
+    //     self.log('Building a pilgrim at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+    //     self.log('The target is: ' + targetResource.x + ", " + targetResource.y);
+    //     return self.buildUnit(SPECS.PILGRIM, direction.x, direction.y);
+    //   } else {
+    //     self.log("No open direction was found - cannot build");
+    //   }
+    // }
 
 
     return null;
