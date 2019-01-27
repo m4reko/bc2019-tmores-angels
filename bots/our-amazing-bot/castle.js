@@ -13,12 +13,12 @@ var castleHelper = {
     }
     // we do stuff
     const team = self.me.team;
+    const location = {x: self.me.x, y: self.me.y};
     let selfOffer = self.last_offer[team];
 
-    let castleTalking = self.getVisibleRobots().filter(r => r.team === team && r.castle_talk > 0);
-    let map = self.getPassableMap();
+    const map = self.getPassableMap();
 
-    let tradeSign = 1;
+    const tradeSign = 1;
     if (team === 0) {
       tradeSign = -1;
     }
@@ -37,6 +37,8 @@ var castleHelper = {
         [-1, -1],
         [-1, -1]
       ];
+      self.guardPositions = structureHelper.createCastleGuardPositions(location, self.vision, map, self.getKarboniteMap(), self.getFuelMap());
+      self.maxSpawns = self.guardPositions.length;
 
       let castles = selfOffer[0] || 0;
       castles += 1 * tradeSign;
@@ -121,8 +123,6 @@ var castleHelper = {
       if (!self.resourcesManagedKarbonite || !self.resourcesManagedFuel || !self.managedKarbonite || !self.managedFuel) {
         self.resourcesManagedKarbonite = [];
         self.resourcesManagedFuel = [];
-        self.managedKarbonite = 0;
-        self.managedFuel = 0;
         for (let y = 0; y < self.getKarboniteMap().length; y++) {
           for (let x = 0; x < self.getKarboniteMap().length; x++) {
             if (self.getKarboniteMap()[y][x]) {
@@ -189,14 +189,7 @@ var castleHelper = {
         self.log(self.resourcesManagedFuel);
       }
     }
-
-    if (castleTalking.length) {
-      for (const ally of castleTalking) {
-        // a unit should send this to locate enemies
-
-        self.heatMap.push({code: ally.castle_talk /*, x: ally.x, y: ally.y*/ });
-      }
-    }
+    if (self.time < 30) return null;
 
     if (!self.closestKarb || !self.closestFuel) {
       self.closestKarb = structureHelper.getClosestResource({x: self.me.x, y: self.me.y}, self.getKarboniteMap());
@@ -218,11 +211,10 @@ var castleHelper = {
       self.managedFuel = 0;
     }
 
-    let location = {x: self.me.x, y: self.me.y};
-
     // defend or attack
-    const enemies = self.getVisibleRobots().filter(r => r.team !== team);
-    const allies = self.getVisibleRobots().filter(r => r.team === team && (r.unit === SPECS.PREACHER || r.unit === SPECS.PROPHET));
+    const visibleRobots = self.getVisibleRobots().filter(r => structureHelper.nav.sqDist(r, location) <= self.vision);
+    const enemies = visibleRobots.filter(r => r.team !== team);
+    const allies = visibleRobots.filter(r => r.team === team && (r.unit === SPECS.PREACHER || r.unit === SPECS.PROPHET));
     if (enemies.length > 0) {
       let spawnLimit = 1;
       if (enemies.length > 2) spawnLimit = enemies.length;
@@ -261,18 +253,25 @@ var castleHelper = {
       }
     }
 
-    // Spawn prophets
-    if ((self.karbonite >= 25 + self.SK && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 12) / 12)) && self.spawnedKarbonite > 0 && self.spawnedFuel > 0) || (self.karbonite > 250 && self.fuel > 600) || self.step > 700) {
-      let location = {x: self.me.x, y: self.me.y};
-      let possibleDirections = structureHelper.getPossibleDirections(location, map, self.getVisibleRobotMap())
-      let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+    let notMaxed = allies.length < self.maxSpawns;
+    let safeKarbonite = (self.step < 40 ? self.karbonite >= 25 + self.SK : self.karbonite >= 25)
 
-      if (randomDirection) {
-        self.spawnedProphets++;
-        self.log('Building a prophet at ' + (self.me.x + randomDirection.x) + ',' + (self.me.y + randomDirection.y));
-        return self.buildUnit(SPECS.PROPHET, randomDirection.x, randomDirection.y);
-      } else {
-        self.log("No random direction was found - cannot build");
+    // Spawn prophets
+    if (notMaxed && (safeKarbonite && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 12) / 12)) && self.spawnedKarbonite > 0 && self.spawnedFuel > 0) || (self.karbonite > 150 && self.fuel > 250) || self.step > 700) {
+      let location = {x: self.me.x, y: self.me.y};
+
+      let position = structureHelper.getCastleGuardPosition(self.guardPositions, allies, self.spawnedProphets);
+      let direction = structureHelper.getDirectionTowards(location, position, map, self.getVisibleRobotMap());
+      if (position) {
+        if (direction) {
+          let pos = position.y * map.length + position.x;
+          self.signal(parseInt(pos.toString(), 10), 2);
+          self.spawnedProphets++;
+          self.log('Building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+          return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
+        } else {
+          self.log("No direction was found - cannot build");
+        }
       }
     }
 
@@ -331,9 +330,7 @@ var castleHelper = {
           else self.spawnedFuel++;
         }
         let pos = targetResource.y * map.length + targetResource.x;
-        if (pos) {
-          self.signal(parseInt(pos.toString(), 10), 2);
-        }
+        self.signal(parseInt(pos.toString(), 10), 2);
         self.log('Building a pilgrim at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
         self.log('The target is: ' + targetResource.x + ", " + targetResource.y);
         return self.buildUnit(SPECS.PILGRIM, direction.x, direction.y);

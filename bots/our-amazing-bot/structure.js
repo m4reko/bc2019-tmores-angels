@@ -63,6 +63,50 @@ var structureHelper = {
     }).pop();
   },
 
+  createCastleGuardPositions: (location, vision, fullMap, karbMap, fuelMap) => {
+    let guardPositions = [];
+
+    for (let y = location.y - 8; y < location.y + 8; y++) {
+      for (let x = location.x - 8; x < location.x + 8; x++) {
+        if (fullMap[y] && fullMap[y][x]) {
+          if (x >= location.x - 1  && x <= location.x + 1 && y >= location.y - 1 && y <= location.y + 1) continue;
+          if ((location.x + location.y) % 2 !== (x + y) % 2) continue;
+          let dist = structureHelper.nav.sqDist(location, {x: x, y: y});
+          if (dist > vision) continue;
+          if (karbMap[y][x] || fuelMap[y][x]) continue;
+          guardPositions.push({x: x, y: y, dist: dist});
+        }
+      }
+    }
+    guardPositions = guardPositions.sort((a, b) => {
+      return a.dist - b.dist;
+    });
+    return guardPositions;
+  },
+
+  getCastleGuardPosition: (positions, robotMap, sent, destination = null) => {
+    let guardPosition = false;
+    let count = -1;
+    let shortestDist = Infinity;
+
+    for (const position of positions) {
+      count++;
+      if (count < sent) continue;
+      if (robotMap[position.y] && robotMap[position.y][position.x]) continue;
+      if (!destination) {
+        guardPosition = {x: position.x, y: position.y};
+        break;
+      } else {
+        let dist = structureHelper.nav.sqDist(position, destination);
+        if (dist < shortestDist) {
+          shortestDist = dist;
+          guardPosition = {x: position.x, y: position.y};
+        }
+      }
+    }
+    return guardPosition;
+  },
+
   getPossibleDirections: (loc, fullMap, robotMap) => {
     let possibleDirections = [];
     for (const direction of structureHelper.directions) {

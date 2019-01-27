@@ -19,23 +19,18 @@ class MyRobot extends BCAbstractRobot {
     identifyUnit() {
       if (this.me.unit === SPECS.PROPHET) {
         this.helper = prophetHelper;
-        this.vision = SPECS.PROPHET.VISION_RADIUS;
       } else if (this.me.unit === SPECS.CASTLE) {
         this.helper = castleHelper;
-        this.vision = SPECS.CASTLE.VISION_RADIUS;
       } else if (this.me.unit === SPECS.CHURCH) {
         this.helper = churchHelper;
-        this.vision = SPECS.CHURCH.VISION_RADIUS;
       } else if (this.me.unit === SPECS.PILGRIM) {
         this.helper = pilgrimHelper;
-        this.vision = SPECS.PILGRIM.VISION_RADIUS;
       } else if (this.me.unit === SPECS.CRUSADER) {
         this.helper = crusaderHelper;
-        this.vision = SPECS.CRUSADER.VISION_RADIUS;
       } else if (this.me.unit === SPECS.PREACHER) {
         this.helper = preacherHelper;
-        this.vision = SPECS.PREACHER.VISION_RADIUS;
       }
+      this.vision = SPECS.UNITS[this.me.unit].VISION_RADIUS;
     }
 
     turn() {

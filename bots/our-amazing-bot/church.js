@@ -15,22 +15,32 @@ var churchHelper = {
     //     }
     //   }
     // }
+    if (self.time < 30) return null;
     let location = {x: self.me.x, y: self.me.y};
 
-    const visible_allies = self.getVisibleRobots().filter(r => r.team === self.me.team);
+    const visible = self.getVisibleRobots();
+    const visible_allies = visible.filter(r => r.team === self.me.team);
     const visible_prophets = visible_allies.filter(r => r.unit === SPECS.PROPHET);
     const visible_pilgrims = visible_allies.filter(r => r.unit === SPECS.PILGRIM);
-    const enemies = self.getVisibleRobots().filter(r => r.team !== self.me.team);
+    const enemies = visible.filter(r => r.team !== self.me.team);
 
-    if (self.step === 1) self.spawnedProphets = 0;
-    if (self.step === 1) self.spawnedPilgrims = 0;
-    if (self.step === 1) self.spawnDefense = 0;
+    if (self.step === 1) {
+      self.spawnedProphets = 0;
+      self.spawnedPilgrims = 0;
+      self.spawnDefense = 0;
+      self.guardPositions = structureHelper.createCastleGuardPositions(location, self.vision, self.getPassableMap(), self.getKarboniteMap(), self.getFuelMap());
+      self.maxSpawns = self.guardPositions.length;
+    }
+    if (self.step === 1)
+    if (self.step === 1)
 
     if (!enemies.length) {
       self.spawnDefense = 0;
     }
 
-    if (enemies.length > 0 && self.spawnDefense < 7 && self.karbonite >= 25 && self.fuel >= 50) {
+    let notMaxed = visible_prophets.length < self.maxSpawns;
+
+    if (enemies.length > 0 && self.spawnDefense < 4 && self.karbonite >= 25 && self.fuel >= 50 && notMaxed) {
       let shortestDist = Infinity;
       let closestEnemy = enemies[0];
 
@@ -42,14 +52,20 @@ var churchHelper = {
         }
       }
 
-      let direction = structureHelper.getDirectionTowards(location, closestEnemy, self.getPassableMap(), self.getVisibleRobotMap());
+      let position = structureHelper.getCastleGuardPosition(self.guardPositions, visible_allies, self.spawnedProphets, closestEnemy);
+      if (position) {
+        let direction = structureHelper.getDirectionTowards(location, position, self.getPassableMap(), self.getVisibleRobotMap());
 
-      if (direction) {
-        self.log('Church building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
-        self.spawnDefense++;
-        return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
-      } else {
-        self.log("No direction was found - cannot build");
+        if (direction) {
+          self.log('Church building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+          let pos = position.y * self.getPassableMap().length + position.x;
+          self.signal(parseInt(pos.toString(), 10), 2);
+          self.spawnDefense++;
+          self.spawnedProphets++;
+          return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
+        } else {
+          self.log("No direction was found - cannot build");
+        }
       }
     } else if (!visible_pilgrims.length
       && self.karbonite >= 25 + self.SK
@@ -66,24 +82,28 @@ var churchHelper = {
       } else {
         self.log("No random direction was found - cannot build");
       }
-
     } else if ((self.karbonite > 25 + self.SK
       && self.fuel > 50 + self.SF
-      && (self.spawnedProphets < ((self.step - self.step % 15) / 15 + 1)))
-    || (self.karbonite > 250 && self.fuel > 500)
-    || self.step > 700) {
+      && (self.spawnedProphets < ((self.step - self.step % 15) / 15)))
+      || (self.karbonite > 250 && self.fuel > 500)
+      || self.step > 700
+      && notMaxed) {
 
-      let possibleDirections = structureHelper.getPossibleDirections(location, self.getPassableMap(), self.getVisibleRobotMap())
-      let direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+      let position = structureHelper.getCastleGuardPosition(self.guardPositions, visible_allies, self.spawnedProphets);
+      if (position) {
+        let map = self.getPassableMap();
+        let direction = structureHelper.getDirectionTowards(location, position, map, self.getVisibleRobotMap());
 
-      if (direction) {
-        self.log('Church building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
-        self.spawnedProphets++;
-        return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
-      } else {
-        self.log("No random direction was found - cannot build");
+        if (direction) {
+          self.log('Church building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+          let pos = position.y * map.length + position.x;
+          self.signal(parseInt(pos.toString(), 10), 2);
+          self.spawnedProphets++;
+          return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
+        } else {
+          self.log("No random direction was found - cannot build");
+        }
       }
-
     }
 
     return null;

@@ -117,7 +117,7 @@ nav.goto = (loc, destination, fullMap, robotMap) => {
 };
 
 nav.sqDist = (start, end) => {
-    return Math.pow(start.x - end.x, 2) + Math.pow(start.y - end.y, 2);
+    return (start.x - end.x) * (start.x - end.x) + (start.y - end.y) * (start.y - end.y);
 };
 
 nav.getClosestKarbonite = (loc, karbMap) => {

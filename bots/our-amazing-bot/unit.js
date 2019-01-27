@@ -68,8 +68,8 @@ var unitHelper = {
   ],
 
   // Gives squared distance
-  sqDist : (start, end) => {
-    return Math.pow(start.x - end.x, 2) + Math.pow(start.y - end.y, 2);
+  sqDist: (start, end) => {
+    return (start.x - end.x) * (start.x - end.x) + (start.y - end.y) * (start.y - end.y);
   },
 
   // True if loc is passable, else False
@@ -187,7 +187,7 @@ var unitHelper = {
 
   // createDistanceMap creates a distancemap according to the destination
   // should be stored and used with getNextDirection method
-  createDistanceMap: (dest, fullMap, danger = null, range = 2) => {
+  createDistanceMap: (dest, fullMap, danger = null, robotMap = [], range = 2) => {
     let distMap = []; // Init distMap
     for (let y = 0; y < fullMap.length; y++) {
       distMap[y] = [];
@@ -221,7 +221,11 @@ var unitHelper = {
                 let distToEnemy = unitHelper.sqDist(new_location, danger);
                 if (distToEnemy <= unitHelper.getVisionRadius(danger)) avoid = true;
               }
-              if (!fullMap[new_location.y] || !fullMap[new_location.y][new_location.x] || avoid) {
+              let blocked = false;
+              if (robotMap.length) {
+                if (robotMap[new_location.y] && robotMap[new_location.y][new_location.x] > 0) blocked = true;
+              }
+              if (!fullMap[new_location.y] || !fullMap[new_location.y][new_location.x] || avoid || blocked) {
                 distMap[new_location.y][new_location.x] = -2;
                 if (current_location.z < range - 1) {
                   new_location.z = 1;
@@ -262,8 +266,8 @@ var unitHelper = {
       let x = enemy.x;
       let y = enemy.y;
       let vision = unitHelper.getVisionRadius(enemy);
-      for (let currentX = x - 10; currentX <= x + 10; currentX++) {
-        for (let currentY = y - 10; currentY <= y + 10; currentY++) {
+      for (let currentX = x - 8; currentX <= x + 8; currentX++) {
+        for (let currentY = y - 8; currentY <= y + 8; currentY++) {
           if (resultMap[y][x] < 0) continue;
           let dist = unitHelper.sqDist({x: x, y: y}, {x: currentX, y: currentY});
           if (dist > vision) continue;
@@ -374,21 +378,18 @@ var unitHelper = {
   getCastleGuardPosition: (location, castle, fullMap, robotMap, karbMap, fuelMap) => {
     let guardPosition = {};
     let shortestDist = Infinity;
-    let distFromCastle = unitHelper.sqDist(location, castle);
 
-    for (let y = location.y - 10; y < location.y + 10; y++) {
-      for (let x = location.x - 10; x < location.x + 10; x++) {
+    for (let y = location.y - 8; y < location.y + 8; y++) {
+      for (let x = location.x - 8; x < location.x + 8; x++) {
         if (fullMap[y] && fullMap[y][x] && robotMap[y] && robotMap[y][x] <= 0) {
-
+          if ((castle.x + castle.y) % 2 !== (x + y) % 2) continue;
           if (x >= castle.x - 1  && x <= castle.x + 1 && y >= castle.y - 1 && y <= castle.y + 1) continue;
           if (karbMap[y][x] || fuelMap[y][x]) continue;
 
           let dist = unitHelper.sqDist(location, {x: x, y: y});
           if (dist <= shortestDist) {
-            if ((castle.x + castle.y) % 2 === (x + y) % 2) {
-              guardPosition = {x: x, y: y}; // Chess board pattern
-              shortestDist = dist;
-            }
+            guardPosition = {x: x, y: y}; // Chess board pattern
+            shortestDist = dist;
           }
         }
       }

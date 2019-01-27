@@ -3,11 +3,17 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var preacherHelper = {
   turn: self => {
-    self.log("Preacher:");
+    // self.log("Preacher:");
     // we do stuff
+    let visibleRobots = self.getVisibleRobots();
     if (!self.castle) {
-        self.castle = self.getVisibleRobots()
+        self.castle = visibleRobots
         .filter(robot => robot.team === self.me.team && robot.unit === SPECS.CASTLE)[0];
+
+        if (!self.castle) {
+          self.castle = visibleRobots
+          .filter(robot => robot.team === self.me.team && robot.unit === SPECS.CHURCH)[0];
+        }
     }
 
     if (!self.lastDestination) self.lastDestination = {x: -1, y: -1};
@@ -19,7 +25,7 @@ var preacherHelper = {
 
     if (self.destination) {
       distanceToDestination = unitHelper.sqDist(location, self.destination);
-      self.log("distance from destination: " + distanceToDestination);
+      // self.log("distance from destination: " + distanceToDestination);
     }
 
     let initTarget = null;
@@ -46,18 +52,19 @@ var preacherHelper = {
       // Start by going towards an enemy
       if (self.target) {
         self.destination = self.target;
+        self.task = "go_to_enemy";
       } else {
         self.destination = unitHelper.getCastleGuardPosition(self.castle, self.castle, map, self.getVisibleRobotMap(), self.getKarboniteMap(), self.getFuelMap());
+        self.task = "go_to_castle";
       }
 
-      self.task = "go_to_enemy";
       self.log("Going towards enemy position given by castle:");
       self.log(location);
       self.log(self.destination);
       self.log("next direction");
     }
 
-    const enemies = self.getVisibleRobots().filter(r => r.team !== self.me.team);
+    const enemies = visibleRobots.filter(r => r.team !== self.me.team);
     let closestOpponent = unitHelper.getClosestAttackableOpponent(self.me, enemies);
 
     // Attack if opponent nearby!
@@ -93,15 +100,15 @@ var preacherHelper = {
           if (signal) {
             self.destination = {x: signal % map.length, y: (signal - signal % map.length) / map.length};
             self.task = "go_to_enemy";
-          }else{
+          } else {
             return null;
           }
         } else {
-          self.log("Standing still");
+          // self.log("Standing still");
           return null;
         }
       }
-    } else if(distanceToDestination<=16){
+    } else if (distanceToDestination <= 16) {
       let visibleRobotMap = self.getVisibleRobotMap();
       if (visibleRobotMap[self.destination.y][self.destination.x]) {
         self.log("Location to guard is occupied");
@@ -130,7 +137,7 @@ var preacherHelper = {
         self.log("Just moving preacher one step closer to: (" + (self.destination.x) + ", " + (self.destination.y) + ")");
 
         self.log(nextDirection);
-        return self.move(nextDirection.x, nextDirection.y);
+        if (self.fuel > self.SF) return self.move(nextDirection.x, nextDirection.y);
       } else {
         self.log("No space to move to");
       }

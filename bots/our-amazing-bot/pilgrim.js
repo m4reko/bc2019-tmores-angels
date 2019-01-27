@@ -3,7 +3,7 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var pilgrimHelper = {
   turn: self => {
-    self.log("Pilgrim");
+    // self.log("Pilgrim");
 
     let map = self.getPassableMap();
     // On the first turn, find out our base
@@ -23,7 +23,7 @@ var pilgrimHelper = {
         } else {
           self.enemyCastle = {x: self.castle.x, y: map.length - self.castle.y, unit: self.castle.unit};
         }
-        self.log("Enemy castle is at: " + self.enemyCastle.x + ", " + self.enemyCastle.y);
+        // self.log("Enemy castle is at: " + self.enemyCastle.x + ", " + self.enemyCastle.y);
     }
 
     const tasks = {
@@ -176,6 +176,7 @@ var pilgrimHelper = {
     }
 
     if (self.destination && Object.keys(self.destination).length) {
+      if (self.waitTurn) self.waitTurn = 0;
       // self.log("My task is: " + self.task);
       // self.log("My destination is: " + self.destination.x + ", " + self.destination.y);
       // self.log("My last destination was: " + self.lastDestination.x + ", " + self.lastDestination.y );

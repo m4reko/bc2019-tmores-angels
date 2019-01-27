@@ -10,6 +10,7 @@ var crusaderHelper = {
       // Set castle as home if castle
         self.castle = self.getVisibleRobots()
         .filter(robot => robot.team === self.me.team && robot.unit === SPECS.CASTLE)[0];
+
         if (!self.castle) {
           // Set church as home if church
           self.castle = self.getVisibleRobots()
