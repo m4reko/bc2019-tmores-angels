@@ -18,7 +18,7 @@ var castleHelper = {
 
     const map = self.getPassableMap();
 
-    const tradeSign = 1;
+    let tradeSign = 1;
     if (team === 0) {
       tradeSign = -1;
     }
