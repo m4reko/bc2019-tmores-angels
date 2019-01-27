@@ -66,8 +66,8 @@ var structureHelper = {
   createCastleGuardPositions: (location, vision, fullMap, karbMap, fuelMap) => {
     let guardPositions = [];
 
-    for (let y = location.y - 8; y < location.y + 8; y++) {
-      for (let x = location.x - 8; x < location.x + 8; x++) {
+    for (let y = location.y - 10; y < location.y + 10; y++) {
+      for (let x = location.x - 10; x < location.x + 10; x++) {
         if (fullMap[y] && fullMap[y][x]) {
           if (x >= location.x - 1  && x <= location.x + 1 && y >= location.y - 1 && y <= location.y + 1) continue;
           if ((location.x + location.y) % 2 !== (x + y) % 2) continue;
