@@ -25,18 +25,59 @@ var churchHelper = {
     const enemies = visible.filter(r => r.team !== self.me.team);
 
     if (self.step === 1) {
+      self.deadPilgrims = [];
       self.spawnedProphets = 0;
       self.spawnedPilgrims = 0;
       self.spawnDefense = 0;
       self.guardPositions = structureHelper.createCastleGuardPositions(location, self.vision, self.getPassableMap(), self.getKarboniteMap(), self.getFuelMap());
       self.maxSpawns = self.guardPositions.length;
+      self.nearbyFuel = [];
+      self.nearbyKarbonite = [];
+    } else if (self.step === 2) {
+      // let fuelmap = self.getFuelMap();
+      // for (let y = 0; y < fuelmap.length; y++) {
+      //   for (let x = 0; x < fuelmap.length; x++) {
+      //     if (fuelmap[y][x] && structureHelper.nav.sqDist(location, {x: x, y: y})) self.nearbyFuel.push({x: x, y: y});
+      //   }
+      // }
+      // let karbmap = self.getKarboniteMap();
+      // for (let y = 0; y < karbmap.length; y++) {
+      //   for (let x = 0; x < karbmap.length; x++) {
+      //     if (karbmap[y][x] && structureHelper.nav.sqDist(location, {x: x, y: y})) self.nearbyKarbonite.push({x: x, y: y});
+      //   }
+      // }
     }
-    if (self.step === 1)
-    if (self.step === 1)
 
     if (!enemies.length) {
       self.spawnDefense = 0;
     }
+
+    // if (self.step > 400 && self.step % 150 === 0) {
+    //   let location = {x: self.me.x, y: self.me.y};
+    //   let nearbyPilgrims = visible_pilgrims.filter(r => structureHelper.nav.sqDist(location, r) <= 9);
+    //   if (nearbyPilgrims.length < self.nearbyFuel.length + self.nearbyKarbonite.length) {
+    //     for (const fuel of self.nearbyFuel) {
+    //       let occupied = false;
+    //       for (const pilgrim of nearbyPilgrims) {
+    //         if (pilgrim.x === fuel.x && pilgrim.y === fuel.y) {
+    //           occupied = true;
+    //           break;
+    //         }
+    //       }
+    //       if (!occupied) self.deadPilgrims.push(fuel);
+    //     }
+    //     for (const karb of self.nearbyKarbonite) {
+    //       let occupied = false;
+    //       for (const pilgrim of nearbyPilgrims) {
+    //         if (pilgrim.x === karb.x && pilgrim.y === karb.y) {
+    //           occupied = true;
+    //           break;
+    //         }
+    //       }
+    //       if (!occupied) self.deadPilgrims.push(karb);
+    //     }
+    //   }
+    // }
 
     let notMaxed = visible_prophets.length < self.maxSpawns;
 
@@ -69,24 +110,25 @@ var churchHelper = {
       }
     } else if (!visible_pilgrims.length
       && self.karbonite >= 25 + self.SK
-      && self.fuel >= 50 + self.SF
-      && self.spawnedPilgrims <= 5) {
+      && self.fuel >= 50 + self.SF) {
+
+      // let targetResource = self.deadPilgrims.pop();
 
       let possibleDirections = structureHelper.getPossibleDirections(location, self.getPassableMap(), self.getVisibleRobotMap())
       let direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
-
       if (direction) {
-        self.spawnedPilgrims++;
         // self.log('Church building a pilgrim at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+        // let pos = targetResource.y * map.length + targetResource.x;
+        // self.signal(parseInt(pos.toString(), 10), 2);
         return self.buildUnit(SPECS.PILGRIM, direction.x, direction.y);
       } else {
         // self.log("No random direction was found - cannot build");
       }
-    } else if ((self.karbonite > 25 + self.SK
+    } else if ((self.karbonite > 25 + self.SK + 20
       && self.fuel > 50 + self.SF
-      && (self.spawnedProphets < ((self.step - self.step % 15) / 15)))
-      || (self.karbonite > 200 && self.fuel > 500)
-      || (self.step > 700 && self.fuel > 250)
+      && (self.spawnedProphets < ((self.step - self.step % 25) / 25)))
+      || (self.karbonite > 300 && self.fuel > 500)
+      || (self.step > 700 && self.karbonite > 25 && self.fuel > 250)
       && notMaxed) {
 
       let position = structureHelper.getCastleGuardPosition(self.guardPositions, visible_allies);

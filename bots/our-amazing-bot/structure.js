@@ -63,7 +63,7 @@ var structureHelper = {
     }).pop();
   },
 
-  createCastleGuardPositions: (location, vision, fullMap, karbMap, fuelMap, enemyCastle = null) => {
+  createCastleGuardPositions: (location, vision, fullMap, karbMap, fuelMap) => {
     let guardPositions = [];
 
     for (let y = location.y - 10; y < location.y + 10; y++) {
@@ -74,18 +74,12 @@ var structureHelper = {
           let dist = structureHelper.nav.sqDist(location, {x: x, y: y});
           if (dist > vision) continue;
           if (karbMap[y][x] || fuelMap[y][x]) continue;
-          let newPos = {x: x, y: y, dist: dist};
-          if (enemyCastle) newPos.enemy = structureHelper.nav.sqDist(enemyCastle, {x: x, y: y});
-          guardPositions.push(newPos);
+          guardPositions.push({x: x, y: y, dist: dist});
         }
       }
     }
     guardPositions = guardPositions.sort((a, b) => {
-      if (enemyCastle && a.dist === b.dist) {
-        return a.enemy - b.enemy;
-      } else {
-        return a.dist - b.dist;
-      }
+      return a.dist - b.dist;
     });
     return guardPositions;
   },

@@ -10,7 +10,7 @@ class MyRobot extends BCAbstractRobot {
     constructor() {
         super();
         this.SK = 60;
-        this.SF = 130;
+        this.SF = 190;
         this.vision = 0;
         this.helper = null;
         this.step = 0;

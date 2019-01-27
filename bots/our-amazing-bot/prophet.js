@@ -105,7 +105,8 @@ var prophetHelper = {
     if (self.task === "guard_castle") {
       // If at destination and no enemy to attack or walk towards,
       // go to new guard position
-      if (distanceToDestination <= 2) {
+      //if (distanceToDestination !== 0) self.log("Distance to destination: " + distanceToDestination);
+      if (distanceToDestination <= 4) {
         let karbMap = self.getKarboniteMap();
         let fuelMap = self.getFuelMap();
         if (distanceToDestination === 0) {
@@ -141,7 +142,7 @@ var prophetHelper = {
 
     // Walk towards destination
     if (Object.keys(self.destination).length) {
-      // self.log("I want to go here: " + self.destination.x + ", " + self.destination.y + " I'm at: " + location.x + ", " + location.y);
+      //self.log("I want to go here: " + self.destination.x + ", " + self.destination.y + " I'm at: " + location.x + ", " + location.y);
       if (!(self.destination.y === self.lastDestination.y && self.destination.x === self.lastDestination.x)) {
         // // self.log(self.destination);
         self.distanceMap = unitHelper.createDistanceMap(self.destination, map);
@@ -166,7 +167,7 @@ var prophetHelper = {
           //   }
           // }
 
-          // self.log("Moving Prophet to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
+          //self.log("Moving Prophet to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
           if (self.fuel > self.SF) return self.move(nextDirection.x, nextDirection.y);
         }
       }

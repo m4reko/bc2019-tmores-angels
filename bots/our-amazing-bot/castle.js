@@ -8,9 +8,9 @@ var castleHelper = {
       self.castleAmount = 1;
     }
 
-    if(self.managedKarbonite){
-      // self.log("ROUND " + self.step);
-    }
+    // if(self.managedKarbonite){
+    //   self.log("ROUND " + self.step);
+    // }
     // we do stuff
     const team = self.me.team;
     const location = {x: self.me.x, y: self.me.y};
@@ -27,6 +27,9 @@ var castleHelper = {
     if (self.step === 1) {
       // things to do first turn only
       // count castles
+      // self.deadPilgrims = [];
+      self.resourcesManagedKarbonite = [];
+      self.resourcesManagedFuel = [];
       self.needBodyGuard = false;
       self.guardedAreas = [];
       self.castleLocations = [
@@ -40,7 +43,8 @@ var castleHelper = {
         [-1, -1]
       ];
       self.vertical = structureHelper.isVertical(map);
-      self.guardPositions = [];
+      self.locationToEnemy = (self.vertical ? (location.x >= map.length / 2 ? {x: location.x - 4, y: location.y} : {x: location.x + 4, y: location.y}) : (location.y >= map.length / 2 ? {x: location.x, y: location.y - 4} : {x: location.x, y: location.y + 4}));
+      self.guardPositions = structureHelper.createCastleGuardPositions(location, self.vision, map, self.getKarboniteMap(), self.getFuelMap());
       self.maxSpawns = self.guardPositions.length;
 
       let castles = selfOffer[0] || 0;
@@ -123,12 +127,7 @@ var castleHelper = {
         }
       }
       // self.log("CastleAmount: " + self.castleAmount);
-      let enemyCastle = {x: self.oppCastleLocations[self.castleNumber - 1][0], y: self.oppCastleLocations[self.castleNumber - 1][1]};
-      self.guardPositions = structureHelper.createCastleGuardPositions(location, self.vision, map, self.getKarboniteMap(), self.getFuelMap(), enemyCastle);
-      self.maxSpawns = self.guardPositions.length;
       if (!self.resourcesManagedKarbonite || !self.resourcesManagedFuel || !self.managedKarbonite || !self.managedFuel) {
-        self.resourcesManagedKarbonite = [];
-        self.resourcesManagedFuel = [];
         for (let y = 0; y < self.getKarboniteMap().length; y++) {
           for (let x = 0; x < self.getKarboniteMap().length; x++) {
             if (self.getKarboniteMap()[y][x]) {
@@ -183,9 +182,11 @@ var castleHelper = {
             }
           }
         }
+        // self.allManagedFuel = self.resourcesManagedFuel;
         self.resourcesManagedFuel = self.resourcesManagedFuel.sort((a, b) => {
           return b.dist - a.dist;
         }).filter(s => !(s.x === self.closestFuel.x && s.y === self.closestFuel.y));
+        // self.allManagedKarbonite = self.resourcesManagedKarbonite;
         self.resourcesManagedKarbonite = self.resourcesManagedKarbonite.sort((a, b) => {
           return b.dist - a.dist;
         }).filter(s => !(s.x === self.closestKarb.x && s.y === self.closestKarb.y));
@@ -259,57 +260,56 @@ var castleHelper = {
       }
     }
 
-    let notMaxed = allies.length < self.maxSpawns;
-    let safeKarbonite = (self.step < 40 ? self.karbonite >= 25 + self.SK : self.karbonite >= 25)
+    // if (self.step > 400 && self.step % 150 === 0) {
+    //   let location = {x: self.me.x, y: self.me.y};
+    //   let nearbyPilgrims = visibleRobots.filter(r => r.team === team && r.unit === SPECS.PILGRIM && structureHelper.nav.sqDist(location, r) <= 9);
+    //   let nearbyFuel = self.allManagedFuel.filter(f => f.dist <= 9);
+    //   let nearbyKarbonite = self.allManagedKarbonite.filter(k => k.dist <= 9);
+    //   if (nearbyPilgrims.length < nearbyFuel.length + nearbyKarbonite.length) {
+    //     for (const fuel of nearbyFuel) {
+    //       let occupied = false;
+    //       for (const pilgrim of nearbyPilgrims) {
+    //         if (pilgrim.x === fuel.x && pilgrim.y === fuel.y) {
+    //           occupied = true;
+    //           break;
+    //         }
+    //       }
+    //       if (!occupied) self.deadPilgrims.push(fuel);
+    //     }
+    //     for (const karb of nearbyKarbonite) {
+    //       let occupied = false;
+    //       for (const pilgrim of nearbyPilgrims) {
+    //         if (pilgrim.x === karb.x && pilgrim.y === karb.y) {
+    //           occupied = true;
+    //           break;
+    //         }
+    //       }
+    //       if (!occupied) self.deadPilgrims.push(karb);
+    //     }
+    //   }
+    // }
 
-    // Spawn prophets
-    if ((self.needBodyGuard && self.karbonite >= 55 && self.fuel >= 100) || (notMaxed && (safeKarbonite && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 15) / 15)) && self.spawnedClosestKarb > 0 && self.spawnedClosestFuel > 0) || (self.karbonite > 200 && self.fuel > 300) || (self.step > 700 && self.fuel > 200))) {
-      let location = {x: self.me.x, y: self.me.y};
-      let position = null;
 
-      let skip = false;
-      if (self.needBodyGuard) {
-        if (self.guardedAreas.length) {
-          for (const area of self.guardedAreas) {
-            if (structureHelper.nav.sqDist(self.needBodyGuard, area) <= 8) {
-              self.needBodyGuard = false;
-              skip = true;
-            }
-          }
-        } else {
-          position = {x: self.needBodyGuard.x, y: self.needBodyGuard.y};
-        }
-      } else {
-        position = structureHelper.getCastleGuardPosition(self.guardPositions, allies);
-      }
-
-      if (!skip && position) {
-        let direction = structureHelper.getDirectionTowards(location, position, map, self.getVisibleRobotMap());
-        if (direction) {
-          let pos = position.y * map.length + position.x;
-          self.signal(parseInt(pos.toString(), 10), 2);
-          if (self.needBodyGuard) {
-            self.guardedAreas.push(position);
-            self.needBodyGuard = false;
-          } else {
-            self.spawnedProphets++;
-          }
-          // self.log('Building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
-          return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
-        } else {
-          // self.log("No direction was found - cannot build");
-        }
-      }
-    }
+    let needDef = (self.spawnedProphets < 2 && self.turn <= 20) || (self.spawnedProphets < 3 && self.turn <= 40);
+    // self.log("I have this much karbonite: " + self.karbonite);
+    // self.log("I have this much fuel: " + self.fuel);
+    // self.log("The status of body guard is this: " + self.needBodyGuard);
+    // self.log("The status of needDef is this: " + needDef);
+    // self.log("I have this many karbonite left: " + self.resourcesManagedKarbonite.length);
+    // self.log("I have this many fuel left: " + self.resourcesManagedFuel.length);
+    // self.log("Status of spawning first karbonite: " + self.spawnedClosestKarb);
+    // self.log("Status of spawning first fuel: " + self.spawnedClosestFuel);
 
     // Spawn pilgrims huge if statement
-    if (!self.needBodyGuard && self.karbonite >= (self.turn < 10 ? 20 : 10 + self.SK) && self.fuel >= 50 + self.SF && ((self.spawnedKarbonite < self.managedKarbonite || self.spawnedFuel < self.managedFuel) || self.spawnedClosestFuel === 0 || self.spawnedClosestKarb === 0)) {
+    if (!self.needBodyGuard && !needDef && self.karbonite >= (self.turn < 10 ? 20 : 10 + self.SK) && self.fuel >= 50 + self.SF && ((self.resourcesManagedKarbonite.length || self.resourcesManagedFuel.length) || self.spawnedClosestFuel === 0 || self.spawnedClosestKarb === 0)) {
       // self.log("spawning pilgrim");
-      let spawnKarbonite = true;
+      // self.log(self.resourcesManagedKarbonite);
+      // self.log(self.resourcesManagedFuel);
+      let spawnKarbonite = false;
       if (self.spawnedClosestKarb === 0 || self.spawnedClosestFuel === 0) {
         spawnKarbonite = self.spawnedClosestKarb === 0;
       } else {
-        spawnKarbonite = (self.spawnedKarbonite <= (self.spawnedFuel === self.managedFuel ? self.spawnedFuel : self.managedKarbonite)) && !(self.spawnedKarbonite === self.managedKarbonite);
+        spawnKarbonite = self.resourcesManagedKarbonite.length && (self.spawnedKarbonite <= (self.resourcesManagedFuel.length ? self.managedKarbonite : self.spawnedFuel));
       }
       let location = {x: self.me.x, y: self.me.y};
 
@@ -321,17 +321,15 @@ var castleHelper = {
       // // self.log("ClosestKarbonite: " + self.spawnedClosestKarb);
       // // self.log("ClosestFuel: " + self.spawnedClosestFuel);
 
-      let karbSources = self.resourcesManagedKarbonite || [];
-      let fuelSources = self.resourcesManagedFuel || [];
       let targetResource = {x: 0, y: 0};
-      if (spawnKarbonite && (self.spawnedClosestKarb === 0 || karbSources.length > 0)) {
+      if (spawnKarbonite && (self.spawnedClosestKarb === 0 || self.resourcesManagedKarbonite.length)) {
         if (self.spawnedClosestKarb === 0) {
           targetResource = self.closestKarb;
         } else {
           // // self.log(karbSources);
           targetResource = self.resourcesManagedKarbonite.pop();
         }
-      } else if (!spawnKarbonite && (self.spawnedClosestFuel === 0 || fuelSources.length > 0)) {
+      } else if (!spawnKarbonite && (self.spawnedClosestFuel === 0 || self.resourcesManagedFuel.length)) {
         if (self.spawnedClosestFuel === 0) {
           targetResource = self.closestFuel;
         } else {
@@ -348,7 +346,7 @@ var castleHelper = {
       let onOtherHalfY = (location.y > map.length / 2 ? (targetResource.y - map.length / 2 < 0) : ((targetResource.y - map.length / 2 > 0)));
       let nearMiddleX = (targetResource.x - map.length / 2 < 4 && targetResource.x - map.length / 2 > -4);
       let nearMiddleY = (targetResource.y - map.length / 2 < 4 && targetResource.y - map.length / 2 > -4);
-      if ((self.vetical && (onOtherHalfX || nearMiddleX)) || (!self.vetical && (onOtherHalfY || nearMiddleY))) {
+      if (structureHelper.nav.sqDist(location, targetResource) > 8 && ((self.vetical && (onOtherHalfX || nearMiddleX)) || (!self.vetical && (onOtherHalfY || nearMiddleY)))) {
         self.needBodyGuard = {x: targetResource.x, y: targetResource.y};
       }
 
@@ -368,9 +366,59 @@ var castleHelper = {
         self.signal(parseInt(pos.toString(), 10), 2);
         // self.log('Building a pilgrim at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
         // self.log('The target is: ' + targetResource.x + ", " + targetResource.y);
+        // self.log(self.resourcesManagedKarbonite);
+        // self.log(self.resourcesManagedFuel);
         return self.buildUnit(SPECS.PILGRIM, direction.x, direction.y);
       } else {
         // self.log("No open direction was found - cannot build");
+      }
+    }
+
+    let notMaxed = allies.length < self.maxSpawns;
+    let safeKarbonite = (self.step < 150 ? self.karbonite >= 25 + self.SK : self.karbonite >= 25)
+
+    // Spawn prophets
+    if ((self.needBodyGuard && self.karbonite >= 55 && self.fuel >= 200) || (notMaxed && (safeKarbonite && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 20) / 20 - 1)) && self.spawnedClosestKarb > 0 && self.spawnedClosestFuel > 0) || (self.karbonite > 250 && self.fuel > 300) || (self.step > 700 && self.karbonite > 25 && self.fuel > 200))) {
+      let location = {x: self.me.x, y: self.me.y};
+      let position = null;
+
+      // self.log("I'm spawning a prophet :D");
+      // self.log(self.resourcesManagedKarbonite);
+      // self.log(self.resourcesManagedFuel);
+
+      let skip = false;
+      if (self.needBodyGuard) {
+        if (self.guardedAreas.length) {
+          for (const area of self.guardedAreas) {
+            if (structureHelper.nav.sqDist(self.needBodyGuard, area) <= 8) {
+              self.needBodyGuard = false;
+              skip = true;
+            }
+          }
+          if (!skip) position = {x: self.needBodyGuard.x, y: self.needBodyGuard.y};
+        } else {
+          position = {x: self.needBodyGuard.x, y: self.needBodyGuard.y};
+        }
+      } else {
+        position = structureHelper.getCastleGuardPosition(self.guardPositions, allies, self.locationToEnemy);
+      }
+
+      if (!skip && position) {
+        let direction = structureHelper.getDirectionTowards(location, position, map, self.getVisibleRobotMap());
+        if (direction) {
+          let pos = position.y * map.length + position.x;
+          self.signal(parseInt(pos.toString(), 10), 2);
+          if (self.needBodyGuard) {
+            self.guardedAreas.push(position);
+            self.needBodyGuard = false;
+          } else {
+            self.spawnedProphets++;
+          }
+          // self.log('Building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+          return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
+        } else {
+          // self.log("No direction was found - cannot build");
+        }
       }
     }
 
