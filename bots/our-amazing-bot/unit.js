@@ -257,21 +257,11 @@ var unitHelper = {
       for (let x = 0; x < distanceMap.length; x++) {
         if (location.x === x && location.y === y) {
           resultMap[y][x] = distanceMap[y][x];
+          for (const enemy of enemies) {
+            if (unitHelper.sqDist({x: x, y: y}, enemy) <= unitHelper.getVisionRadius(enemy)) distanceMap[y][x] += 100;
+          }
         } else {
           resultMap[y][x] = unitMap[y][x] > 0 ? -2 : distanceMap[y][x];
-        }
-      }
-    }
-    for (const enemy of enemies) {
-      let x = enemy.x;
-      let y = enemy.y;
-      let vision = unitHelper.getVisionRadius(enemy);
-      for (let currentX = x - 8; currentX <= x + 8; currentX++) {
-        for (let currentY = y - 8; currentY <= y + 8; currentY++) {
-          if (resultMap[y][x] < 0) continue;
-          let dist = unitHelper.sqDist({x: x, y: y}, {x: currentX, y: currentY});
-          if (dist > vision) continue;
-          resultMap[x][y] += (200 - dist);
         }
       }
     }

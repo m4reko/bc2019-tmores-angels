@@ -84,14 +84,11 @@ var structureHelper = {
     return guardPositions;
   },
 
-  getCastleGuardPosition: (positions, robotMap, sent, destination = null) => {
+  getCastleGuardPosition: (positions, robotMap, destination = null) => {
     let guardPosition = false;
-    let count = -1;
     let shortestDist = Infinity;
 
     for (const position of positions) {
-      count++;
-      if (count < sent) continue;
       if (robotMap[position.y] && robotMap[position.y][position.x]) continue;
       if (!destination) {
         guardPosition = {x: position.x, y: position.y};

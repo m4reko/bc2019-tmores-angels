@@ -9,7 +9,7 @@ var castleHelper = {
     }
 
     if(self.managedKarbonite){
-      self.log("ROUND " + self.step);
+      // self.log("ROUND " + self.step);
     }
     // we do stuff
     const team = self.me.team;
@@ -27,7 +27,8 @@ var castleHelper = {
     if (self.step === 1) {
       // things to do first turn only
       // count castles
-      self.needBodyGuard = null;
+      self.needBodyGuard = false;
+      self.guardedAreas = [];
       self.castleLocations = [
         [-1, -1],
         [-1, -1],
@@ -121,7 +122,7 @@ var castleHelper = {
           self.oppCastleLocations[2][1] = map.length - (self.castleLocations[2][1] + 1);
         }
       }
-      self.log("CastleAmount: " + self.castleAmount);
+      // self.log("CastleAmount: " + self.castleAmount);
       if (!self.resourcesManagedKarbonite || !self.resourcesManagedFuel || !self.managedKarbonite || !self.managedFuel) {
         self.resourcesManagedKarbonite = [];
         self.resourcesManagedFuel = [];
@@ -187,17 +188,17 @@ var castleHelper = {
         }).filter(s => !(s.x === self.closestKarb.x && s.y === self.closestKarb.y));
         self.managedFuel = self.resourcesManagedFuel.length;
         self.managedKarbonite = self.resourcesManagedKarbonite.length;
-        self.log(self.resourcesManagedKarbonite);
-        self.log(self.resourcesManagedFuel);
+        // self.log(self.resourcesManagedKarbonite);
+        // self.log(self.resourcesManagedFuel);
       }
     }
     if (self.time < 30) return null;
 
     if (!self.closestKarb || !self.closestFuel) {
       self.closestKarb = structureHelper.getClosestResource({x: self.me.x, y: self.me.y}, self.getKarboniteMap());
-      self.log("My closest karbonite is here: " + self.closestKarb.x + ", " + self.closestKarb.y);
+      // self.log("My closest karbonite is here: " + self.closestKarb.x + ", " + self.closestKarb.y);
       self.closestFuel = structureHelper.getClosestResource({x: self.me.x, y: self.me.y}, self.getFuelMap());
-      self.log("My closest fuel is here: " + self.closestFuel.x + ", " + self.closestFuel.y);
+      // self.log("My closest fuel is here: " + self.closestFuel.x + ", " + self.closestFuel.y);
     }
 
     if (!self.spawnedKarbonite && !self.spawnedFuel && !self.spawnedCrusaders && !self.spawnedProphets && !self.spawnedClosestKarb && !self.spawnedClosestFuel) {
@@ -236,12 +237,12 @@ var castleHelper = {
         let direction = structureHelper.getDirectionTowards(location, closestEnemy, map, self.getVisibleRobotMap());
 
         if (direction) {
-          self.log('Building a preacher/prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+          // self.log('Building a preacher/prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
           let pos = closestEnemy.y * map.length + closestEnemy.x;
           self.signal(parseInt(pos.toString(), 10), 2);
           return self.buildUnit((preachers ? SPECS.PREACHER : SPECS.PROPHET), direction.x, direction.y);
         } else {
-          self.log("No open direction was found - cannot build");
+          // self.log("No open direction was found - cannot build");
         }
       } else {
         let alliesWithin8 = allies.filter(r => r.unit === SPECS.PREACHER && structureHelper.nav.sqDist(location, r) <= 8);
@@ -259,37 +260,48 @@ var castleHelper = {
     let safeKarbonite = (self.step < 40 ? self.karbonite >= 25 + self.SK : self.karbonite >= 25)
 
     // Spawn prophets
-    if ((self.needBodyGuard && self.karbonite >= 55 && self.fuel >= 100) || (notMaxed && (safeKarbonite && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 12) / 12)) && self.spawnedClosestKarb > 0 && self.spawnedClosestFuel > 0) || (self.karbonite > 150 && self.fuel > 250) || self.step > 700)) {
+    if ((self.needBodyGuard && self.karbonite >= 55 && self.fuel >= 100) || (notMaxed && (safeKarbonite && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 15) / 15)) && self.spawnedClosestKarb > 0 && self.spawnedClosestFuel > 0) || (self.karbonite > 200 && self.fuel > 300) || (self.step > 700 && self.fuel > 200))) {
       let location = {x: self.me.x, y: self.me.y};
       let position = null;
 
+      let skip = false;
       if (self.needBodyGuard) {
-        position = {x: self.needBodyGuard.x, y: self.needBodyGuard.y};
+        if (self.guardedAreas.length) {
+          for (const area of self.guardedAreas) {
+            if (structureHelper.nav.sqDist(self.needBodyGuard, area) <= 8) {
+              self.needBodyGuard = false;
+              skip = true;
+            }
+          }
+        } else {
+          position = {x: self.needBodyGuard.x, y: self.needBodyGuard.y};
+        }
       } else {
-        position = structureHelper.getCastleGuardPosition(self.guardPositions, allies, self.spawnedProphets);
+        position = structureHelper.getCastleGuardPosition(self.guardPositions, allies);
       }
 
-      if (position) {
+      if (!skip && position) {
         let direction = structureHelper.getDirectionTowards(location, position, map, self.getVisibleRobotMap());
         if (direction) {
           let pos = position.y * map.length + position.x;
           self.signal(parseInt(pos.toString(), 10), 2);
           if (self.needBodyGuard) {
-            self.needBodyGuard = null;
+            self.guardedAreas.push(position);
+            self.needBodyGuard = false;
           } else {
             self.spawnedProphets++;
           }
-          self.log('Building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+          // self.log('Building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
           return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
         } else {
-          self.log("No direction was found - cannot build");
+          // self.log("No direction was found - cannot build");
         }
       }
     }
 
     // Spawn pilgrims huge if statement
     if (!self.needBodyGuard && self.karbonite >= (self.turn < 10 ? 20 : 10 + self.SK) && self.fuel >= 50 + self.SF && ((self.spawnedKarbonite < self.managedKarbonite || self.spawnedFuel < self.managedFuel) || self.spawnedClosestFuel === 0 || self.spawnedClosestKarb === 0)) {
-      self.log("spawning pilgrim");
+      // self.log("spawning pilgrim");
       let spawnKarbonite = true;
       if (self.spawnedClosestKarb === 0 || self.spawnedClosestFuel === 0) {
         spawnKarbonite = self.spawnedClosestKarb === 0;
@@ -298,13 +310,13 @@ var castleHelper = {
       }
       let location = {x: self.me.x, y: self.me.y};
 
-      // self.log("SpawnKarbonite: " + spawnKarbonite);
-      // self.log("SpawnedKarbonite: " + self.spawnedKarbonite);
-      // self.log("ManagedKarbonite: " + self.managedKarbonite);
-      // self.log("SpawnedFuel: " + self.spawnedFuel);
-      // self.log("ManagedFuel: " + self.managedFuel);
-      // self.log("ClosestKarbonite: " + self.spawnedClosestKarb);
-      // self.log("ClosestFuel: " + self.spawnedClosestFuel);
+      // // self.log("SpawnKarbonite: " + spawnKarbonite);
+      // // self.log("SpawnedKarbonite: " + self.spawnedKarbonite);
+      // // self.log("ManagedKarbonite: " + self.managedKarbonite);
+      // // self.log("SpawnedFuel: " + self.spawnedFuel);
+      // // self.log("ManagedFuel: " + self.managedFuel);
+      // // self.log("ClosestKarbonite: " + self.spawnedClosestKarb);
+      // // self.log("ClosestFuel: " + self.spawnedClosestFuel);
 
       let karbSources = self.resourcesManagedKarbonite || [];
       let fuelSources = self.resourcesManagedFuel || [];
@@ -313,14 +325,14 @@ var castleHelper = {
         if (self.spawnedClosestKarb === 0) {
           targetResource = self.closestKarb;
         } else {
-          // self.log(karbSources);
+          // // self.log(karbSources);
           targetResource = self.resourcesManagedKarbonite.pop();
         }
       } else if (!spawnKarbonite && (self.spawnedClosestFuel === 0 || fuelSources.length > 0)) {
         if (self.spawnedClosestFuel === 0) {
           targetResource = self.closestFuel;
         } else {
-          // self.log(fuelSources);
+          // // self.log(fuelSources);
           targetResource = self.resourcesManagedFuel.pop();
         }
       } else {
@@ -338,7 +350,7 @@ var castleHelper = {
       }
 
       let direction = structureHelper.getDirectionTowards(location, targetResource, map, self.getVisibleRobotMap());
-      // self.log("Direction: " + direction);
+      // // self.log("Direction: " + direction);
       //let pos = structureHelper.posTo6Bit(targetResource, map.length);
       if (direction) {
         if (spawnKarbonite) {
@@ -351,11 +363,11 @@ var castleHelper = {
         }
         let pos = targetResource.y * map.length + targetResource.x;
         self.signal(parseInt(pos.toString(), 10), 2);
-        self.log('Building a pilgrim at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
-        self.log('The target is: ' + targetResource.x + ", " + targetResource.y);
+        // self.log('Building a pilgrim at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+        // self.log('The target is: ' + targetResource.x + ", " + targetResource.y);
         return self.buildUnit(SPECS.PILGRIM, direction.x, direction.y);
       } else {
-        self.log("No open direction was found - cannot build");
+        // self.log("No open direction was found - cannot build");
       }
     }
 
@@ -366,10 +378,10 @@ var castleHelper = {
     //   let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
     //   if(randomDirection){
     //     self.spawnedCrusaders++;
-    //     self.log('Building a crusader at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
+    //     // self.log('Building a crusader at ' + (self.me.x+randomDirection.x) + ',' + (self.me.y+randomDirection.y));
     //     return self.buildUnit(SPECS.CRUSADER, randomDirection.x, randomDirection.y);
     //   }else{
-    //     self.log("No random direction was found - cannot build");
+    //     // self.log("No random direction was found - cannot build");
     //   }
     // }
 

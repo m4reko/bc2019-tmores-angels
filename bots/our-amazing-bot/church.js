@@ -10,7 +10,7 @@ var churchHelper = {
     //   if (possibleDirections) {
     //     let randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
     //     if (randomDirection && randomDirection.x && randomDirection.y) {
-    //       self.log('Church building a crusader at ' + (self.me.x + randomDirection.x) + ',' + (self.me.y + randomDirection.y));
+    //       // self.log('Church building a crusader at ' + (self.me.x + randomDirection.x) + ',' + (self.me.y + randomDirection.y));
     //       return self.buildUnit(SPECS.CRUSADER, randomDirection.x, randomDirection.y);
     //     }
     //   }
@@ -52,19 +52,19 @@ var churchHelper = {
         }
       }
 
-      let position = structureHelper.getCastleGuardPosition(self.guardPositions, visible_allies, self.spawnedProphets, closestEnemy);
+      let position = structureHelper.getCastleGuardPosition(self.guardPositions, visible_allies, closestEnemy);
       if (position) {
         let direction = structureHelper.getDirectionTowards(location, position, self.getPassableMap(), self.getVisibleRobotMap());
 
         if (direction) {
-          self.log('Church building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+          // self.log('Church building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
           let pos = position.y * self.getPassableMap().length + position.x;
           self.signal(parseInt(pos.toString(), 10), 2);
           self.spawnDefense++;
           self.spawnedProphets++;
           return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
         } else {
-          self.log("No direction was found - cannot build");
+          // self.log("No direction was found - cannot build");
         }
       }
     } else if (!visible_pilgrims.length
@@ -77,31 +77,31 @@ var churchHelper = {
 
       if (direction) {
         self.spawnedPilgrims++;
-        self.log('Church building a pilgrim at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+        // self.log('Church building a pilgrim at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
         return self.buildUnit(SPECS.PILGRIM, direction.x, direction.y);
       } else {
-        self.log("No random direction was found - cannot build");
+        // self.log("No random direction was found - cannot build");
       }
     } else if ((self.karbonite > 25 + self.SK
       && self.fuel > 50 + self.SF
       && (self.spawnedProphets < ((self.step - self.step % 15) / 15)))
-      || (self.karbonite > 250 && self.fuel > 500)
-      || self.step > 700
+      || (self.karbonite > 200 && self.fuel > 500)
+      || (self.step > 700 && self.fuel > 250)
       && notMaxed) {
 
-      let position = structureHelper.getCastleGuardPosition(self.guardPositions, visible_allies, self.spawnedProphets);
+      let position = structureHelper.getCastleGuardPosition(self.guardPositions, visible_allies);
       if (position) {
         let map = self.getPassableMap();
         let direction = structureHelper.getDirectionTowards(location, position, map, self.getVisibleRobotMap());
 
         if (direction) {
-          self.log('Church building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
+          // self.log('Church building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
           let pos = position.y * map.length + position.x;
           self.signal(parseInt(pos.toString(), 10), 2);
           self.spawnedProphets++;
           return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
         } else {
-          self.log("No random direction was found - cannot build");
+          // self.log("No random direction was found - cannot build");
         }
       }
     }

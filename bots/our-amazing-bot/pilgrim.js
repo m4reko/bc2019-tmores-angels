@@ -3,7 +3,7 @@ import {BCAbstractRobot, SPECS} from 'battlecode';
 
 var pilgrimHelper = {
   turn: self => {
-    // self.log("Pilgrim");
+    // // self.log("Pilgrim");
 
     let map = self.getPassableMap();
     // On the first turn, find out our base
@@ -23,7 +23,7 @@ var pilgrimHelper = {
         } else {
           self.enemyCastle = {x: self.castle.x, y: map.length - self.castle.y, unit: self.castle.unit};
         }
-        // self.log("Enemy castle is at: " + self.enemyCastle.x + ", " + self.enemyCastle.y);
+        // // self.log("Enemy castle is at: " + self.enemyCastle.x + ", " + self.enemyCastle.y);
     }
 
     const tasks = {
@@ -31,23 +31,23 @@ var pilgrimHelper = {
       1: 'stash'
     };
 
-    // self.log("My castle is located at: " + self.castle.x + ", " + self.castle.y);
+    // // self.log("My castle is located at: " + self.castle.x + ", " + self.castle.y);
 
     let initTarget = null;
     if (self.step === 1) {
-      // self.log("Hi I'm new");
+      // // self.log("Hi I'm new");
       self.waitTurn = 0;
       if (self.isRadioing(self.castle)) {
-        // self.log("My castle is sending radio");
+        // // self.log("My castle is sending radio");
         if (self.castle.signal_radius === 2) {
           let signal = self.castle.signal;
-          // self.log("I recieved a signal");
-          // self.log("signal: " + signal);
+          // // self.log("I recieved a signal");
+          // // self.log("signal: " + signal);
           if (signal) {
             initTarget = {x: signal % map.length, y: (signal - signal % map.length) / map.length};
-            self.log("I'm going to " + initTarget.x + ", " + initTarget.y);
+            // self.log("I'm going to " + initTarget.x + ", " + initTarget.y);
             self.task = tasks[0]; // mine
-            // self.log("my task is " + self.task);
+            // // self.log("my task is " + self.task);
           }
         }
       }
@@ -86,9 +86,27 @@ var pilgrimHelper = {
       distanceToDestination = unitHelper.sqDist(location, self.destination);
     }
 
+    let enemies = self.getVisibleRobots().filter(r => r.team !== self.me.team && r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CHURCH);
+
+    // enemies close, run away
+    if (enemies.length) {
+      let closeEnemies = enemies.filter(r => unitHelper.sqDist(location, r) <= unitHelper.getVisionRadius(r));
+      if (closeEnemies.length) {
+        let closest = unitHelper.getClosestOpponent(self.me, closeEnemies);
+        let previousDestination = {x: self.destination.x, y: self.destination.y};
+        self.destination = {x: closest.x, y: closest.y};
+        // // self.log(self.destination);
+        self.distanceMap = unitHelper.createDistanceMap(self.destination, map);
+        let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.distanceMap, self.getVisibleRobotMap(), location);
+        let nextDirection = unitHelper.getNextDirection(location, 4, self.vision, populatedDistanceMap, true);
+        self.destination = {x: previousDestination.x, y: previousDestination.y};
+        if (nextDirection && self.fuel >= 4) return self.move(nextDirection.x, nextDirection.y);
+      }
+    }
+
     // return with mined stuff
     if (self.destination && self.task == 'stash') {
-      // self.log("I'm trying to stash at: " + self.destination.x + ", " + self.destination.y + ". I'm at: " + location.x + ", " + location.y);
+      // // self.log("I'm trying to stash at: " + self.destination.x + ", " + self.destination.y + ". I'm at: " + location.x + ", " + location.y);
       if (distanceToDestination <= 2) {
         let oldDest = {x:self.destination.x, y:self.destination.y};
         self.task = tasks[0]; // mine
@@ -111,7 +129,7 @@ var pilgrimHelper = {
 
     // mine stuff
     if (self.destination && self.task === 'mine') {
-      // self.log("I'm trying to mine at: " + self.destination.x + ", " + self.destination.y + ". I'm at: " + location.x + ", " + location.y);
+      // // self.log("I'm trying to mine at: " + self.destination.x + ", " + self.destination.y + ". I'm at: " + location.x + ", " + location.y);
       if (location.x === self.destination.x && location.y === self.destination.y) {
         if (self.waitTurn) self.waitTurn = 0;
         // If at destination
@@ -119,14 +137,14 @@ var pilgrimHelper = {
           let target = {x: 0, y: 0};
           // if (self.stashTarget === null) {
           let distanceToCastle = unitHelper.sqDist(location, self.castle);
-          // self.log("I see these churces: " + self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
+          // // self.log("I see these churces: " + self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
           target = unitHelper.getClosestChurch(location, self.getVisibleRobots().filter(r => r.team === self.me.team && r.unit === SPECS.CHURCH));
-          // self.log("This is my closest church " + target);
+          // // self.log("This is my closest church " + target);
           if (!target) {
             if (self.karbonite >= 50 && self.fuel >= 200) {
               if (distanceToCastle > 25) {
                 target = unitHelper.getChurchBuildPosition(location, map, self.getFuelMap(), self.getKarboniteMap(), self.getVisibleRobotMap());
-                // self.log("I'm trying to build here: " + target.x + ", " + target.y);
+                // // self.log("I'm trying to build here: " + target.x + ", " + target.y);
                 if (target.x !== -1 && target.y !== -1) {
                   // self.stashTarget = {x:target.x, y:target.y};
                   return self.buildUnit(SPECS.CHURCH, target.x - location.x, target.y - location.y);
@@ -177,12 +195,12 @@ var pilgrimHelper = {
 
     if (self.destination && Object.keys(self.destination).length) {
       if (self.waitTurn) self.waitTurn = 0;
-      // self.log("My task is: " + self.task);
-      // self.log("My destination is: " + self.destination.x + ", " + self.destination.y);
-      // self.log("My last destination was: " + self.lastDestination.x + ", " + self.lastDestination.y );
-      // self.log("Trying to create distance map");
+      // // self.log("My task is: " + self.task);
+      // // self.log("My destination is: " + self.destination.x + ", " + self.destination.y);
+      // // self.log("My last destination was: " + self.lastDestination.x + ", " + self.lastDestination.y );
+      // // self.log("Trying to create distance map");
       if (!(self.destination.x === self.lastDestination.x && self.destination.y === self.lastDestination.y)) {
-        // self.log("Created distance map");
+        // // self.log("Created distance map");
         if (self.destination.x === self.targetarea.x && self.destination.y === self.targetarea.y) {
           self.distanceMap = self.resourceDistanceMap;
         } else {
@@ -196,20 +214,19 @@ var pilgrimHelper = {
       //   for (let x = 0; x < self.distanceMap.length; x++) {
       //     row += "| " + (self.distanceMap[y][x] !== null ? " " : "") + (self.distanceMap[y][x] < 100 && self.distanceMap[y][x] !== null ? " " : "") + (self.distanceMap[y][x] < 10 && self.distanceMap[y][x] !== null && self.distanceMap[y][x] >= 0 ? " " : "")  + self.distanceMap[y][x] + " |";
       //   }
-      //   self.log(row);
+      //   // self.log(row);
       // }
 
       let visibleRobotMap = self.getVisibleRobotMap();
-      let enemies = self.getVisibleRobots().filter(r => r.team !== self.me.team && r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CHURCH);
       let maxWalk = (self.fuel >= 4 * 4 ? 4 : 2);
-      let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.distanceMap, visibleRobotMap, location);
+      let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.distanceMap, visibleRobotMap, location, enemies);
 
       // for (let y = 0; y < populatedDistanceMap.length; y++) {
       //   let row = "";
       //   for (let x = 0; x < populatedDistanceMap.length; x++) {
       //     row += "| " + (populatedDistanceMap[y][x] !== null ? " " : "") + (populatedDistanceMap[y][x] < 100 && populatedDistanceMap[y][x] !== null ? " " : "") + (populatedDistanceMap[y][x] < 10 && populatedDistanceMap[y][x] !== null && populatedDistanceMap[y][x] >= 0 ? " " : "")  + populatedDistanceMap[y][x] + " |";
       //   }
-      //   self.log(row);
+      //   // self.log(row);
       // }
 
       let nextDirection = unitHelper.getNextDirection(location, maxWalk, self.vision, populatedDistanceMap);
@@ -219,12 +236,12 @@ var pilgrimHelper = {
           self.distanceMap = unitHelper.createDistanceMap(self.destination, map, self.enemyCastle, visibleRobotMap);
           nextDirection = unitHelper.getNextDirection(location, maxWalk, self.vision, self.distanceMap);
         }
-        self.log("Moving pilgrim to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
-        // // self.log("Passable: " + map[location.y + nextDirection.y][location.x + nextDirection.x]);
-        // // self.log("Robots: " + self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]);
-        if (self.fuel > self.SF) return self.move(nextDirection.x, nextDirection.y);
+        // self.log("Moving pilgrim to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
+        // // // self.log("Passable: " + map[location.y + nextDirection.y][location.x + nextDirection.x]);
+        // // // self.log("Robots: " + self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]);
+        if (self.fuel > self.SF || enemies.length) return self.move(nextDirection.x, nextDirection.y);
       } else {
-        // self.log("No space to move to");
+        // // self.log("No space to move to");
       }
     }
 
