@@ -382,7 +382,7 @@ var unitHelper = {
     for (let y = location.y - 8; y < location.y + 8; y++) {
       for (let x = location.x - 8; x < location.x + 8; x++) {
         if (fullMap[y] && fullMap[y][x] && robotMap[y] && robotMap[y][x] <= 0) {
-          if ((castle.x + castle.y) % 2 !== (x + y) % 2) continue;
+          if ((x + y) % 2 !== 1) continue;
           if (x >= castle.x - 1  && x <= castle.x + 1 && y >= castle.y - 1 && y <= castle.y + 1) continue;
           if (karbMap[y][x] || fuelMap[y][x]) continue;
 

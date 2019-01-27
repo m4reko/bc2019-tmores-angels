@@ -105,21 +105,25 @@ var prophetHelper = {
     if (self.task === "guard_castle") {
       // If at destination and no enemy to attack or walk towards,
       // go to new guard position
-      if (distanceToDestination === 0) {
-        if ((self.me.x + self.me.y) % 2 !== (self.castle.x + self.castle.y) % 2) {
-          self.destination = unitHelper.getCastleGuardPosition(location, self.castle, map, visibleRobotMap, self.getKarboniteMap(), self.getFuelMap());
-        } else {
-          return null; // stand in guard position
+      if (distanceToDestination <= 2) {
+        let karbMap = self.getKarboniteMap();
+        let fuelMap = self.getFuelMap();
+        if (distanceToDestination === 0) {
+          if ((self.me.x + self.me.y) % 2 !== 1) {
+            self.destination = unitHelper.getCastleGuardPosition(location, self.castle, map, visibleRobotMap, karbMap, fuelMap);
+          } else {
+            return null; // stand in guard position
+          }
+        } else if (visibleRobotMap[self.destination.y][self.destination.x] !== 0 || karbMap[self.destination.y][self.destination.x] || fuelMap[self.destination.y][self.destination.x]) {
+          if (self.waitTurn < 2) {
+            self.waitTurn++;
+            return null;
+          }
+          self.waitTurn = 0;
+          // self.log("Location to guard is occupied")
+          // If destination occupied, get new closest guard position
+          self.destination = unitHelper.getCastleGuardPosition(location, self.castle, map, visibleRobotMap, karbMap, fuelMap);
         }
-      } else if (distanceToDestination <= 2 && visibleRobotMap[self.destination.y][self.destination.x] > 0) {
-        if (self.waitTurn < 2) {
-          self.waitTurn++;
-          return null;
-        }
-        self.waitTurn = 0;
-        // self.log("Location to guard is occupied")
-        // If destination occupied, get new closest guard position
-        self.destination = unitHelper.getCastleGuardPosition(location, self.castle, map, visibleRobotMap, self.getKarboniteMap(), self.getFuelMap());
       }
     } else if (self.task === "attack_opponent") {
 

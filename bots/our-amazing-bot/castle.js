@@ -27,6 +27,7 @@ var castleHelper = {
     if (self.step === 1) {
       // things to do first turn only
       // count castles
+      self.needBodyGuard = null;
       self.castleLocations = [
         [-1, -1],
         [-1, -1],
@@ -37,6 +38,7 @@ var castleHelper = {
         [-1, -1],
         [-1, -1]
       ];
+      self.vertical = structureHelper.isVertical(map);
       self.guardPositions = structureHelper.createCastleGuardPositions(location, self.vision, map, self.getKarboniteMap(), self.getFuelMap());
       self.maxSpawns = self.guardPositions.length;
 
@@ -91,7 +93,7 @@ var castleHelper = {
     } else if (self.step === 5) {
       // things to do on the fifth turn only
       // check the map and calculate the position of opposing castles
-      const vertical = structureHelper.isVertical(map);
+      const vertical = self.vertical;
       if (vertical) {
         if (self.castleLocations[0][0] >= 0) {
           self.oppCastleLocations[0][0] = map[0].length - (self.castleLocations[0][0] + 1);
@@ -257,16 +259,26 @@ var castleHelper = {
     let safeKarbonite = (self.step < 40 ? self.karbonite >= 25 + self.SK : self.karbonite >= 25)
 
     // Spawn prophets
-    if (notMaxed && (safeKarbonite && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 12) / 12)) && self.spawnedKarbonite > 0 && self.spawnedFuel > 0) || (self.karbonite > 150 && self.fuel > 250) || self.step > 700) {
+    if ((self.needBodyGuard && self.karbonite >= 55 && self.fuel >= 100) || (notMaxed && (safeKarbonite && self.fuel >= 50 + self.SF && (self.spawnedProphets < ((self.step - self.step % 12) / 12)) && self.spawnedClosestKarb > 0 && self.spawnedClosestFuel > 0) || (self.karbonite > 150 && self.fuel > 250) || self.step > 700)) {
       let location = {x: self.me.x, y: self.me.y};
+      let position = null;
 
-      let position = structureHelper.getCastleGuardPosition(self.guardPositions, allies, self.spawnedProphets);
-      let direction = structureHelper.getDirectionTowards(location, position, map, self.getVisibleRobotMap());
+      if (self.needBodyGuard) {
+        position = {x: self.needBodyGuard.x, y: self.needBodyGuard.y};
+      } else {
+        position = structureHelper.getCastleGuardPosition(self.guardPositions, allies, self.spawnedProphets);
+      }
+
       if (position) {
+        let direction = structureHelper.getDirectionTowards(location, position, map, self.getVisibleRobotMap());
         if (direction) {
           let pos = position.y * map.length + position.x;
           self.signal(parseInt(pos.toString(), 10), 2);
-          self.spawnedProphets++;
+          if (self.needBodyGuard) {
+            self.needBodyGuard = null;
+          } else {
+            self.spawnedProphets++;
+          }
           self.log('Building a prophet at ' + (self.me.x + direction.x) + ',' + (self.me.y + direction.y));
           return self.buildUnit(SPECS.PROPHET, direction.x, direction.y);
         } else {
@@ -275,9 +287,8 @@ var castleHelper = {
       }
     }
 
-
     // Spawn pilgrims huge if statement
-    if (self.karbonite >= (self.turn < 10 ? 20 : 10 + self.SK) && self.fuel >= 50 + self.SF && ((self.spawnedKarbonite < self.managedKarbonite || self.spawnedFuel < self.managedFuel) || self.spawnedClosestFuel === 0 || self.spawnedClosestKarb === 0)) {
+    if (!self.needBodyGuard && self.karbonite >= (self.turn < 10 ? 20 : 10 + self.SK) && self.fuel >= 50 + self.SF && ((self.spawnedKarbonite < self.managedKarbonite || self.spawnedFuel < self.managedFuel) || self.spawnedClosestFuel === 0 || self.spawnedClosestKarb === 0)) {
       self.log("spawning pilgrim");
       let spawnKarbonite = true;
       if (self.spawnedClosestKarb === 0 || self.spawnedClosestFuel === 0) {
@@ -317,6 +328,15 @@ var castleHelper = {
         targetResource = {x: -1, y: -1};
         // targetResource = {x: self.me.x + randomDirection.x, y: self.me.y + randomDirection.y};
       }
+      // check if it's in a dangerous spot
+      let onOtherHalfX = (location.x > map.length / 2 ? (targetResource.x - map.length / 2 < 0) : ((targetResource.x - map.length / 2 > 0)));
+      let onOtherHalfY = (location.y > map.length / 2 ? (targetResource.y - map.length / 2 < 0) : ((targetResource.y - map.length / 2 > 0)));
+      let nearMiddleX = (targetResource.x - map.length / 2 < 4 && targetResource.x - map.length / 2 > -4);
+      let nearMiddleY = (targetResource.y - map.length / 2 < 4 && targetResource.y - map.length / 2 > -4);
+      if ((self.vetical && (onOtherHalfX || nearMiddleX)) || (!self.vetical && (onOtherHalfY || nearMiddleY))) {
+        self.needBodyGuard = {x: targetResource.x, y: targetResource.y};
+      }
+
       let direction = structureHelper.getDirectionTowards(location, targetResource, map, self.getVisibleRobotMap());
       // self.log("Direction: " + direction);
       //let pos = structureHelper.posTo6Bit(targetResource, map.length);

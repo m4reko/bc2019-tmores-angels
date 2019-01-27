@@ -199,9 +199,10 @@ var pilgrimHelper = {
       //   self.log(row);
       // }
 
+      let visibleRobotMap = self.getVisibleRobotMap();
       let enemies = self.getVisibleRobots().filter(r => r.team !== self.me.team && r.unit !== SPECS.PILGRIM && r.unit !== SPECS.CHURCH);
       let maxWalk = (self.fuel >= 4 * 4 ? 4 : 2);
-      let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.distanceMap, self.getVisibleRobotMap(), location);
+      let populatedDistanceMap = unitHelper.addUnitsToDistanceMap(self.distanceMap, visibleRobotMap, location);
 
       // for (let y = 0; y < populatedDistanceMap.length; y++) {
       //   let row = "";
@@ -214,6 +215,10 @@ var pilgrimHelper = {
       let nextDirection = unitHelper.getNextDirection(location, maxWalk, self.vision, populatedDistanceMap);
 
       if (nextDirection) {
+        if (populatedDistanceMap[location.y][location.x] === populatedDistanceMap[location.y + nextDirection.y][location.x + nextDirection.x]) {
+          self.distanceMap = unitHelper.createDistanceMap(self.destination, map, self.enemyCastle, visibleRobotMap);
+          nextDirection = unitHelper.getNextDirection(location, maxWalk, self.vision, self.distanceMap);
+        }
         self.log("Moving pilgrim to: (" + (location.x + nextDirection.x) + ", " + (location.y + nextDirection.y) + ")");
         // // self.log("Passable: " + map[location.y + nextDirection.y][location.x + nextDirection.x]);
         // // self.log("Robots: " + self.getVisibleRobotMap()[location.y + nextDirection.y][location.x + nextDirection.x]);
