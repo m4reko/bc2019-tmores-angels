@@ -40,7 +40,7 @@ var castleHelper = {
         [-1, -1]
       ];
       self.vertical = structureHelper.isVertical(map);
-      self.guardPositions = structureHelper.createCastleGuardPositions(location, self.vision, map, self.getKarboniteMap(), self.getFuelMap());
+      self.guardPositions = [];
       self.maxSpawns = self.guardPositions.length;
 
       let castles = selfOffer[0] || 0;
@@ -123,6 +123,9 @@ var castleHelper = {
         }
       }
       // self.log("CastleAmount: " + self.castleAmount);
+      let enemyCastle = {x: self.oppCastleLocations[self.castleNumber - 1][0], y: self.oppCastleLocations[self.castleNumber - 1][1]};
+      self.guardPositions = structureHelper.createCastleGuardPositions(location, self.vision, map, self.getKarboniteMap(), self.getFuelMap(), enemyCastle);
+      self.maxSpawns = self.guardPositions.length;
       if (!self.resourcesManagedKarbonite || !self.resourcesManagedFuel || !self.managedKarbonite || !self.managedFuel) {
         self.resourcesManagedKarbonite = [];
         self.resourcesManagedFuel = [];

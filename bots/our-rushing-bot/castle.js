@@ -7,8 +7,8 @@ var castleHelper = {
     // SETTINGS FOR OUR RUSHING BOT
     // -----
     let rush_with = [];
-    rush_with[0] = SPECS.PREACHER;
-    rush_with[1] = SPECS.PROPHET;
+    rush_with[0] = SPECS.CRUSADER;
+    rush_with[1] = SPECS.PREACHER;
 
     const map = self.getPassableMap();
 
